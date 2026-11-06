@@ -57,9 +57,12 @@
    :type set: collections.abc.Callable[[_GenericType1, float], None] | None
    :mod-option arg set: skip-refine
 
-.. function:: FloatVectorProperty(update, get, set)
+.. function:: FloatVectorProperty(default, update, get, set)
 
    :generic-types: _GenericType1: bpy.types.bpy_struct
+
+   :type default: collections.abc.Sequence[float] | collections.abc.Sequence[collections.abc.Sequence[float]] | :class:`mathutils.Vector` | :class:`mathutils.Matrix` | :class:`mathutils.Color` | :class:`mathutils.Euler` | :class:`mathutils.Quaternion`
+   :mod-option arg default: skip-refine
 
    :type update: collections.abc.Callable[[_GenericType1, :class:`bpy.types.Context`], None] | None
    :mod-option arg update: skip-refine
