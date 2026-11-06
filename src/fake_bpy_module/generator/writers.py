@@ -431,6 +431,87 @@ class PyCodeWriterBase(BaseWriter):
                     wt.addln(self.ellipsis_strings["function"])
                 wt.new_line(2)
 
+    def _attribute_type(self, attr_node: AttributeNode) -> tuple[str, bool]:
+        """Return an attribute's type and whether it is read-only."""
+        dtype_list_node = attr_node.element(DataTypeListNode)
+        dtype_str = None
+        is_readonly = False
+        if not dtype_list_node.empty():
+            dtype_nodes = find_children(dtype_list_node, DataTypeNode)
+            dtype_str = make_union(dtype_nodes)
+            for dtype_node in dtype_nodes:
+                if "option" in dtype_node.attributes:
+                    options = dtype_node.attributes["option"]
+                    if "readonly" in options:
+                        is_readonly = True
+
+                if self._is_accept_none(dtype_node, 'CLS_ATTR'):
+                    dtype_str = f"{dtype_str} | None"
+                    break
+
+        if dtype_str is None:
+            dtype_str = "typing.Any"
+        return dtype_str, is_readonly
+
+    def _base_attributes(
+            self, class_node: ClassNode) -> dict[str, tuple[str, bool]]:
+        """Return the attributes the module's bases of a class declare."""
+        result: dict[str, tuple[str, bool]] = {}
+        seen: set[str] = set()
+        pending = list(self._class_bases.get(
+            class_node.element(NameNode).astext(), []))
+        while pending:
+            base = pending.pop(0)
+            if base in seen or base not in self._class_attributes:
+                continue
+            seen.add(base)
+            for name, attr in self._class_attributes[base].items():
+                result.setdefault(name, attr)
+            pending.extend(self._class_bases.get(base, []))
+        return result
+
+    @staticmethod
+    def _override_comment(base_attr: tuple[str, bool] | None, dtype_str: str,
+                          is_readonly: bool) -> str:
+        """Return a comment suppressing a narrowed override's diagnostic."""
+        # An attribute may deliberately narrow the one a base class declares
+        # (`SubsurfModifier.type` is 'SUBSURF'), which type checkers report
+        # as an invalid override.
+        if base_attr is None:
+            return ""
+        base_dtype_str, base_is_readonly = base_attr
+        if is_readonly and not base_is_readonly:
+            # A property overriding a writable attribute.
+            return "  # ty: ignore[invalid-property-type-override]"
+        # An attribute that adds `None` to the base's type does not narrow
+        # it, and stays reported as an incompatible override.
+        adds_none = dtype_str.endswith(" | None") and \
+            not base_dtype_str.endswith(" | None")
+        if not is_readonly and not base_is_readonly and not adds_none \
+                and dtype_str != base_dtype_str:
+            return "  # ty: ignore[invalid-mutable-override]"
+        return ""
+
+    def _collect_class_attributes(self, document: nodes.document) -> None:
+        """Remember the bases and attributes of the module's classes."""
+        self._class_bases: dict[str, list[str]] = {}
+        self._class_attributes: dict[str, dict[str, tuple[str, bool]]] = {}
+        for class_node in find_children(document, ClassNode):
+            name = class_node.element(NameNode).astext()
+            self._class_bases[name] = [
+                dtype_node.to_string().split("[")[0].split(".")[-1]
+                for base_class_node in find_children(
+                    class_node.element(BaseClassListNode), BaseClassNode)
+                for dtype_node in find_children(
+                    base_class_node.element(DataTypeListNode), DataTypeNode)
+            ]
+            self._class_attributes[name] = {
+                attr_node.element(NameNode).astext():
+                    self._attribute_type(attr_node)
+                for attr_node in find_children(
+                    class_node.element(AttributeListNode), AttributeNode)
+            }
+
     # pylint: disable=R0914,R0915
     def _write_class_code(self, class_node: ClassNode) -> None:
         wt = self._writer
@@ -483,35 +564,22 @@ class PyCodeWriterBase(BaseWriter):
                 wt.addln("'''")
                 wt.new_line(1)
 
+            base_attrs = self._base_attributes(class_node)
             for attr_node in attr_nodes:
                 name_node = attr_node.element(NameNode)
-                dtype_list_node = attr_node.element(DataTypeListNode)
                 desc_node = attr_node.element(DescriptionNode)
                 if "deprecated" in attr_node.attributes:
                     desc_node.insert(
                         0, nodes.Text(attr_node.attributes["deprecated"]))
 
-                dtype_str = None
-                is_readonly = False
-                if not dtype_list_node.empty():
-                    dtype_nodes = find_children(dtype_list_node, DataTypeNode)
-                    dtype_str = make_union(dtype_nodes)
-                    for dtype_node in dtype_nodes:
-                        if "option" in dtype_node.attributes:
-                            options = dtype_node.attributes["option"]
-                            if "readonly" in options:
-                                is_readonly = True
-
-                        if self._is_accept_none(dtype_node, 'CLS_ATTR'):
-                            dtype_str = f"{dtype_str} | None"
-                            break
-
-                if dtype_str is None:
-                    dtype_str = "typing.Any"
+                dtype_str, is_readonly = self._attribute_type(attr_node)
+                comment = self._override_comment(
+                    base_attrs.get(name_node.astext()), dtype_str, is_readonly)
 
                 if is_readonly:
                     wt.addln("@property")
-                    wt.addln(f"def {name_node.astext()}(self) -> {dtype_str}:")
+                    wt.addln(f"def {name_node.astext()}(self) -> {dtype_str}:"
+                             f"{comment}")
 
                     with CodeWriterIndent(1, True):
                         if not desc_node.empty():
@@ -529,7 +597,7 @@ class PyCodeWriterBase(BaseWriter):
                         wt.new_line(1)
                 else:
                     wt.addln(f"{name_node.astext()}: {dtype_str}"
-                             f"{self.ellipsis_strings['attribute']}")
+                             f"{self.ellipsis_strings['attribute']}{comment}")
 
                     if not desc_node.empty():
                         wt.add("''' ")
@@ -611,6 +679,7 @@ class PyCodeWriterBase(BaseWriter):
         # At first, sort data to avoid generating large diff.
         # Note: Base class must be located above derived class
         sorted_data = sorted_entry_point_nodes(document)
+        self._collect_class_attributes(document)
 
         with Path(f"{filename}.{self.file_format}").open(
                 "w", encoding="utf-8", newline="\n") as file:
