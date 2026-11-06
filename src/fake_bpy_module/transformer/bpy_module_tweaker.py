@@ -113,30 +113,46 @@ class BpyModuleTweaker(TransformerBase):
         if module_name != "bpy.app.handlers":
             return
 
-        # The docs list persistent as data of type `type`, but it is a
-        # decorator that returns the decorated function unchanged.
+        # persistent is a decorator that returns the decorated function
+        # unchanged. Older docs list it as data of type `type`, so it becomes
+        # a function first.
         for data_node in document.findall(DataNode):
             if data_node.element(NameNode).astext() != "persistent":
                 continue
 
             func_node = FunctionNode.create_template(function_type="function")
-            func_node.attributes["generic-types"] = "_GenericType1"
             func_node.element(NameNode).add_text("persistent")
             func_node.replace_node(data_node.element(DescriptionNode))
-
             arg_node = ArgumentNode.create_template(argument_type="posonlyarg")
             arg_node.element(NameNode).add_text("func")
-            dtype_node = make_data_type_node("_GenericType1")
-            dtype_node.attributes["mod-option"] = "skip-refine"
-            arg_node.element(DataTypeListNode).append_child(dtype_node)
             func_node.element(ArgumentListNode).append_child(arg_node)
 
-            dtype_node = make_data_type_node("_GenericType1")
-            dtype_node.attributes["mod-option"] = "skip-refine"
-            func_node.element(FunctionReturnNode).element(
-                DataTypeListNode).append_child(dtype_node)
-
             data_node.parent.replace(data_node, func_node)
+
+        # Newer docs list it as a function typed with a TypeVar `_F`, which
+        # the data type refiner cannot resolve and drops. Type it as generic
+        # over the decorated function in both cases.
+        for func_node in document.findall(FunctionNode):
+            if func_node.element(NameNode).astext() != "persistent":
+                continue
+            arg_nodes = find_children(
+                func_node.element(ArgumentListNode), ArgumentNode)
+            if len(arg_nodes) != 1:
+                output_log(
+                    LOG_LEVEL_WARN,
+                    "bpy.app.handlers.persistent does not take exactly one "
+                    "argument, so it is not typed as a decorator")
+                continue
+
+            func_node.attributes["generic-types"] = "_GenericType1"
+            for dtype_list_node in (
+                    arg_nodes[0].element(DataTypeListNode),
+                    func_node.element(FunctionReturnNode).element(
+                        DataTypeListNode)):
+                dtype_list_node.clear()
+                dtype_node = make_data_type_node("_GenericType1")
+                dtype_node.attributes["mod-option"] = "skip-refine"
+                dtype_list_node.append_child(dtype_node)
 
     def _add_bpy_ops_override_parameters(
             self, document: nodes.document) -> None:

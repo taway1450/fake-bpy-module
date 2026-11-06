@@ -1,0 +1,28 @@
+<document source="<string>">
+    <source-filename>
+        make_bpy_app_handlers_persistent_decorator_function.rst
+    <module>
+        <name>
+            bpy.app.handlers
+        <description>
+    <function function_type="function" generic-types="_GenericType1">
+        <name>
+            persistent
+        <description>
+            Function decorator for callback functions not to be removed when loading new files.
+        <argument-list>
+            <argument argument_type="posonlyarg">
+                <name>
+                    func
+                <description>
+                    The callback function.
+                <default-value>
+                <data-type-list>
+                    <data-type mod-option="skip-refine">
+                        _GenericType1
+        <return>
+            <description>
+                The callback function itself.
+            <data-type-list>
+                <data-type mod-option="skip-refine">
+                    _GenericType1

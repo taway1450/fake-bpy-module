@@ -440,10 +440,17 @@ class BpyModuleTweakerTest(TransformerTestBase):
             self.compare_with_file_contents(trans.pformat(), expect)
 
     def test_make_bpy_app_handlers_persistent_decorator(self) -> None:
-        rst_files = ["make_bpy_app_handlers_persistent_decorator.rst"]
-        expect_files = ["make_bpy_app_handlers_persistent_decorator.xml"]
+        rst_files = [
+            "make_bpy_app_handlers_persistent_decorator.rst",
+            "make_bpy_app_handlers_persistent_decorator_function.rst",
+        ]
+        expect_files = [
+            "make_bpy_app_handlers_persistent_decorator.xml",
+            "make_bpy_app_handlers_persistent_decorator_function.xml",
+        ]
         expect_transformed_files = [
-            "make_bpy_app_handlers_persistent_decorator_transformed.xml"
+            "make_bpy_app_handlers_persistent_decorator_transformed.xml",
+            "make_bpy_app_handlers_persistent_decorator_function_transformed.xml",
         ]
         rst_files = [f"{self.data_dir}/input/{f}" for f in rst_files]
         expect_files = [f"{self.data_dir}/expect/{f}" for f in expect_files]
