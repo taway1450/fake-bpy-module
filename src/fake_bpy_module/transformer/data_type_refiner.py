@@ -228,6 +228,10 @@ class DataTypeRefiner(TransformerBase):
         if dtype_str in ("any", "Any", "Any type."):
             return [make_data_type_node("typing.Any")]
 
+        # Python typing syntax (e.g. "Callable[[Self, Context], None]").
+        if dtype_str == "Self":
+            return [make_data_type_node("typing_extensions.Self")]
+
         if dtype_str[1:].lower() == "d vector":
             s = self._parse_custom_data_type(
                 "Vector", uniq_full_names, uniq_module_names, module_name)
@@ -792,12 +796,18 @@ class DataTypeRefiner(TransformerBase):
         uniq_module_names = self._entry_points_cache["uniq_module_names"]
 
         def parse_multiple_data_type_elements(
-                elements_str: str, modifier: str) -> list[DataTypeNode]:
+                elements_str: str, modifier: str,
+                keep_unrefined: bool = False) -> list[DataTypeNode]:
+            # keep_unrefined: an element that can't be refined becomes
+            # typing.Any instead of being dropped, so the element count is
+            # kept (a Callable's parameter list).
             elements = split_string_by_comma(elements_str, False)
             elm_dtype_nodes: list[list[DataTypeNode]] = []
             for elm in elements:
                 dtype_nodes = self._get_refined_data_type_internal(
                     elm, module_name, variable_kind, additional_info)
+                if len(dtype_nodes) == 0 and keep_unrefined:
+                    dtype_nodes = [make_data_type_node("typing.Any")]
                 if len(dtype_nodes) >= 1:
                     elm_dtype_nodes.append(dtype_nodes)
 
@@ -829,12 +839,12 @@ class DataTypeRefiner(TransformerBase):
                     elements_str, "collections.abc.Callable")
 
             params_str = elements[0][1:-1].strip()
-            params_node = parse_multiple_data_type_elements(params_str, "")[0]
+            # A parameter type that can't be refined becomes typing.Any, so
+            # the Callable keeps its parameter count.
+            params_node = parse_multiple_data_type_elements(
+                params_str, "", keep_unrefined=True)[0]
             if params_str == "":
                 params_node = make_data_type_node("[]")
-            elif params_node.astext() == "":
-                # None of the parameter types could be refined.
-                params_node = make_data_type_node("...")
 
             return_nodes = self._get_refined_data_type_internal(
                 elements[1], module_name, variable_kind, additional_info)

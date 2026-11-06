@@ -112,6 +112,38 @@
                 ]
     <data>
         <name>
+            data_python_typing_syntax_callable_self
+        <description>
+        <data-type-list>
+            <data-type option="never none">
+                collections.abc.Callable[
+                [
+                typing_extensions.Self
+                , 
+                <class-ref>
+                    module_1.ClassA
+                ]
+                , 
+                None
+                ]
+    <data>
+        <name>
+            data_python_typing_syntax_callable_unknown_argument
+        <description>
+        <data-type-list>
+            <data-type option="never none">
+                collections.abc.Callable[
+                [
+                typing.Any
+                , 
+                <class-ref>
+                    module_1.ClassA
+                ]
+                , 
+                None
+                ]
+    <data>
+        <name>
             data_python_typing_syntax_callable_union
         <description>
         <data-type-list>

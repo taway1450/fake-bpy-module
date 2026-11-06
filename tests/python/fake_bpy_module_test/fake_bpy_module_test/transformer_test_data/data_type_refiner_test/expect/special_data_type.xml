@@ -72,6 +72,26 @@
                 list[Callable[[], None]]
     <data>
         <name>
+            data_python_typing_syntax_callable_self
+        <description>
+        <data-type-list>
+            <data-type>
+                Callable[[Self, 
+                <class-ref>
+                    ClassA
+                ], None]
+    <data>
+        <name>
+            data_python_typing_syntax_callable_unknown_argument
+        <description>
+        <data-type-list>
+            <data-type>
+                Callable[[UnknownType, 
+                <class-ref>
+                    ClassA
+                ], None]
+    <data>
+        <name>
             data_python_typing_syntax_callable_union
         <description>
         <data-type-list>

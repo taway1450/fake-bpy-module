@@ -32,6 +32,14 @@
 
    :type: list[Callable[[], None]]
 
+.. data:: data_python_typing_syntax_callable_self
+
+   :type: Callable[[Self, :class:`ClassA`], None]
+
+.. data:: data_python_typing_syntax_callable_unknown_argument
+
+   :type: Callable[[UnknownType, :class:`ClassA`], None]
+
 .. data:: data_python_typing_syntax_callable_union
 
    :type: list[Callable[[:class:`ClassA`], None] | Callable[[:class:`ClassA`, None], None]]
