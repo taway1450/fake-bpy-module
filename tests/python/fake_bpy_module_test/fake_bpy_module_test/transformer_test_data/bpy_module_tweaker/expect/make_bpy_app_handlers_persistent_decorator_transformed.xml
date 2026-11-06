@@ -1,0 +1,34 @@
+<document source="<string>">
+    <source-filename>
+        make_bpy_app_handlers_persistent_decorator.rst
+    <module>
+        <name>
+            bpy.app.handlers
+        <description>
+    <data>
+        <name>
+            load_post
+        <description>
+            on loading a new blend file (after).
+        <data-type-list>
+            <data-type>
+                list[Callable[[str], None]]
+    <function function_type="function" generic-types="_GenericType1">
+        <name>
+            persistent
+        <description>
+            Function decorator for callback functions not to be removed when loading new files
+        <argument-list>
+            <argument argument_type="posonlyarg">
+                <name>
+                    func
+                <description>
+                <default-value>
+                <data-type-list>
+                    <data-type mod-option="skip-refine">
+                        _GenericType1
+        <return>
+            <description>
+            <data-type-list>
+                <data-type mod-option="skip-refine">
+                    _GenericType1

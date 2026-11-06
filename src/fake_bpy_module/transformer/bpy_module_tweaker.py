@@ -15,8 +15,10 @@ from fake_bpy_module.analyzer.nodes import (
     DataTypeListNode,
     DataTypeNode,
     DefaultValueNode,
+    DescriptionNode,
     FunctionListNode,
     FunctionNode,
+    FunctionReturnNode,
     ModuleNode,
     NameNode,
     make_data_type_node,
@@ -103,6 +105,38 @@ class BpyModuleTweaker(TransformerBase):
                 continue
             data_type_list_node.insert(
                 0, make_data_type_node("list of callable[`bpy.types.Scene`]"))
+
+    def _make_bpy_app_handlers_persistent_decorator(
+            self, document: nodes.document) -> None:
+        module_name = get_first_child(
+            document, ModuleNode).element(NameNode).astext()
+        if module_name != "bpy.app.handlers":
+            return
+
+        # The docs list persistent as data of type `type`, but it is a
+        # decorator that returns the decorated function unchanged.
+        for data_node in document.findall(DataNode):
+            if data_node.element(NameNode).astext() != "persistent":
+                continue
+
+            func_node = FunctionNode.create_template(function_type="function")
+            func_node.attributes["generic-types"] = "_GenericType1"
+            func_node.element(NameNode).add_text("persistent")
+            func_node.replace_node(data_node.element(DescriptionNode))
+
+            arg_node = ArgumentNode.create_template(argument_type="posonlyarg")
+            arg_node.element(NameNode).add_text("func")
+            dtype_node = make_data_type_node("_GenericType1")
+            dtype_node.attributes["mod-option"] = "skip-refine"
+            arg_node.element(DataTypeListNode).append_child(dtype_node)
+            func_node.element(ArgumentListNode).append_child(arg_node)
+
+            dtype_node = make_data_type_node("_GenericType1")
+            dtype_node.attributes["mod-option"] = "skip-refine"
+            func_node.element(FunctionReturnNode).element(
+                DataTypeListNode).append_child(dtype_node)
+
+            data_node.parent.replace(data_node, func_node)
 
     def _add_bpy_ops_override_parameters(
             self, document: nodes.document) -> None:
@@ -278,6 +312,7 @@ class BpyModuleTweaker(TransformerBase):
                 self._make_bpy_types_classes_methods_arguments_kwonlyargs,
                 self._make_bpy_prop_functions_arguments_kwonlyargs,
                 self._add_bpy_app_handlers_functions_data_types,
+                self._make_bpy_app_handlers_persistent_decorator,
                 self._add_bpy_ops_override_parameters,
                 self._rebase_bpy_types_class_base_class,
                 self._change_ops_function_to_function_class
