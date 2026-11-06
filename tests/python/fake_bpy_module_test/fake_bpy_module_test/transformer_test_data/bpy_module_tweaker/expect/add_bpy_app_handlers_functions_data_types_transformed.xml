@@ -16,3 +16,11 @@
                 <class-ref>
                     bpy.types.Scene
                 ]
+    <data>
+        <name>
+            data_2
+        <description>
+            data_2 description
+        <data-type-list>
+            <data-type>
+                list[Callable[[str], None]]

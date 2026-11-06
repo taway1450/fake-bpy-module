@@ -96,6 +96,11 @@ class BpyModuleTweaker(TransformerBase):
             if name_node.astext() == "persistent":
                 continue
             data_type_list_node = data_node.element(DataTypeListNode)
+            # Only a fallback for handlers the docs give no type: a documented
+            # type is exact, and a Scene arm would wrongly accept a handler
+            # that takes a Scene where Blender passes something else.
+            if not data_type_list_node.empty():
+                continue
             data_type_list_node.insert(
                 0, make_data_type_node("list of callable[`bpy.types.Scene`]"))
 

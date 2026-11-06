@@ -11,3 +11,11 @@
         <description>
             data_1 description
         <data-type-list>
+    <data>
+        <name>
+            data_2
+        <description>
+            data_2 description
+        <data-type-list>
+            <data-type>
+                list[Callable[[str], None]]
