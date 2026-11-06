@@ -8,6 +8,20 @@
 
       :type: :class:`bpy.types.Mesh`, :class:`bpy.types.Curve`, :class:`bpy.types.SurfaceCurve`, :class:`bpy.types.MetaBall`, :class:`bpy.types.TextCurve`, :class:`bpy.types.Curves`, :class:`bpy.types.PointCloud`, :class:`bpy.types.Volume`, :class:`bpy.types.PointCloud`, :class:`bpy.types.GreasePencil`, :class:`bpy.types.GreasePencilv3`, :class:`bpy.types.Armature`, :class:`bpy.types.Lattice`, :class:`bpy.types.Light`, :class:`bpy.types.LightProbe`, :class:`bpy.types.Camera`, :class:`bpy.types.Speaker`
 
+.. class:: bpy_prop_array
+
+   :generic-types: _GenericType1
+
+   .. method:: foreach_get(seq)
+
+      :type seq: collections.abc.MutableSequence[_GenericType1] | typing_extensions.Buffer | npt.NDArray
+      :mod-option arg seq: skip-refine
+
+   .. method:: foreach_set(seq)
+
+      :type seq: collections.abc.Sequence[_GenericType1] | typing_extensions.Buffer | npt.NDArray
+      :mod-option arg seq: skip-refine
+
 .. class:: bpy_prop_collection
 
    :generic-types: _GenericType1
