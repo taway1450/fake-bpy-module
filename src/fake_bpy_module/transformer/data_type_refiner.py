@@ -228,7 +228,8 @@ class DataTypeRefiner(TransformerBase):
         if dtype_str in ("any", "Any", "Any type."):
             return [make_data_type_node("typing.Any")]
 
-        # Python typing syntax (e.g. "Callable[[Self, Context], None]").
+        # A bare "Self", as in the parameter list of Python typing syntax
+        # ("Callable[[Self, Context], None]").
         if dtype_str == "Self":
             return [make_data_type_node("typing_extensions.Self")]
 
@@ -839,8 +840,6 @@ class DataTypeRefiner(TransformerBase):
                     elements_str, "collections.abc.Callable")
 
             params_str = elements[0][1:-1].strip()
-            # A parameter type that can't be refined becomes typing.Any, so
-            # the Callable keeps its parameter count.
             params_node = parse_multiple_data_type_elements(
                 params_str, "", keep_unrefined=True)[0]
             if params_str == "":
