@@ -817,6 +817,44 @@ class DataTypeRefiner(TransformerBase):
                 append_child(new_dtype_node, nodes.Text(modifier))
             return [new_dtype_node]
 
+        def parse_callable_elements(elements_str: str) -> list[DataTypeNode]:
+            # Callable[[A, B], R]: the parameter list is a bracketed list of
+            # types, not a type. Refining it as one element strips the
+            # brackets of a one-parameter list ("[str]" -> "str") and drops an
+            # empty one ("[]"), which gives an invalid Callable.
+            elements = split_string_by_comma(elements_str, False)
+            if len(elements) != 2 or not (
+                    elements[0].startswith("[") and elements[0].endswith("]")):
+                return parse_multiple_data_type_elements(
+                    elements_str, "collections.abc.Callable")
+
+            params_str = elements[0][1:-1].strip()
+            params_node = parse_multiple_data_type_elements(params_str, "")[0]
+            if params_str == "":
+                params_node = make_data_type_node("[]")
+            elif params_node.astext() == "":
+                # None of the parameter types could be refined.
+                params_node = make_data_type_node("...")
+
+            return_nodes = self._get_refined_data_type_internal(
+                elements[1], module_name, variable_kind, additional_info)
+            if len(return_nodes) == 0:
+                return_nodes = [make_data_type_node("typing.Any")]
+
+            new_dtype_node = DataTypeNode()
+            append_child(new_dtype_node,
+                         nodes.Text("collections.abc.Callable["))
+            for child in params_node.children:
+                append_child(new_dtype_node, child)
+            append_child(new_dtype_node, nodes.Text(", "))
+            for i, dtype_node in enumerate(return_nodes):
+                for child in dtype_node.children:
+                    append_child(new_dtype_node, child)
+                if i != len(return_nodes) - 1:
+                    append_child(new_dtype_node, nodes.Text(" | "))
+            append_child(new_dtype_node, nodes.Text("]"))
+            return [new_dtype_node]
+
         # [Ex] (Vector, Quaternion, Vector)  # noqa: ERA001
         if m := _REGEX_DATA_TYPE_START_AND_END_WITH_PARENTHESES.match(
                 dtype_str):
@@ -835,6 +873,8 @@ class DataTypeRefiner(TransformerBase):
                 modifier = ""
             modifier = pydoc_to_typing_annotation.get(modifier, modifier)
 
+            if modifier == "collections.abc.Callable":
+                return parse_callable_elements(m.group(2))
             return parse_multiple_data_type_elements(m.group(2), modifier)
 
         if m := _REGEX_DATA_TYPE_LITERALS_WITH_BACK_QUOTE_TYPE.match(dtype_str):

@@ -58,6 +58,33 @@
                 Callable[[float, int], tuple[float, int]]
     <data>
         <name>
+            data_python_typing_syntax_callable_one_argument
+        <description>
+        <data-type-list>
+            <data-type>
+                list[Callable[[str], None]]
+    <data>
+        <name>
+            data_python_typing_syntax_callable_no_arguments
+        <description>
+        <data-type-list>
+            <data-type>
+                list[Callable[[], None]]
+    <data>
+        <name>
+            data_python_typing_syntax_callable_union
+        <description>
+        <data-type-list>
+            <data-type>
+                list[Callable[[
+                <class-ref>
+                    ClassA
+                ], None] | Callable[[
+                <class-ref>
+                    ClassA
+                , None], None]]
+    <data>
+        <name>
             data_python_typing_syntax_7
         <description>
         <data-type-list>

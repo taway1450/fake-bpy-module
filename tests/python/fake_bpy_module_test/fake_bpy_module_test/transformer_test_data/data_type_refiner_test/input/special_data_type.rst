@@ -24,6 +24,18 @@
 
    :type: Callable[[float, int], tuple[float, int]]
 
+.. data:: data_python_typing_syntax_callable_one_argument
+
+   :type: list[Callable[[str], None]]
+
+.. data:: data_python_typing_syntax_callable_no_arguments
+
+   :type: list[Callable[[], None]]
+
+.. data:: data_python_typing_syntax_callable_union
+
+   :type: list[Callable[[:class:`ClassA`], None] | Callable[[:class:`ClassA`, None], None]]
+
 .. data:: data_python_typing_syntax_7
 
    :type: Literal["OPTION_1", "OPTION_2", "OPTION_3"]

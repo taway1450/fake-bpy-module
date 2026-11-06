@@ -84,6 +84,61 @@
                 ]
     <data>
         <name>
+            data_python_typing_syntax_callable_one_argument
+        <description>
+        <data-type-list>
+            <data-type option="never none">
+                list[
+                collections.abc.Callable[
+                [
+                str
+                ]
+                , 
+                None
+                ]
+                ]
+    <data>
+        <name>
+            data_python_typing_syntax_callable_no_arguments
+        <description>
+        <data-type-list>
+            <data-type option="never none">
+                list[
+                collections.abc.Callable[
+                []
+                , 
+                None
+                ]
+                ]
+    <data>
+        <name>
+            data_python_typing_syntax_callable_union
+        <description>
+        <data-type-list>
+            <data-type option="never none">
+                list[
+                collections.abc.Callable[
+                [
+                <class-ref>
+                    module_1.ClassA
+                ]
+                , 
+                None
+                ]
+                 | 
+                collections.abc.Callable[
+                [
+                <class-ref>
+                    module_1.ClassA
+                , 
+                None
+                ]
+                , 
+                None
+                ]
+                ]
+    <data>
+        <name>
             data_python_typing_syntax_7
         <description>
         <data-type-list>
