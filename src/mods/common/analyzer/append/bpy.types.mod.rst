@@ -175,7 +175,7 @@
 
       :rtype: _GenericType1 | _GenericType2
       :mod-option rtype: skip-refine
-      :generic-types: _GenericType2
+      :generic-types: _GenericType2 = None
 
 .. class:: bpy_prop_collection_idprop
 
