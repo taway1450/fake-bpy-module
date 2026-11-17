@@ -482,14 +482,14 @@ class PyCodeWriterBase(BaseWriter):
         base_dtype_str, base_is_readonly = base_attr
         if is_readonly and not base_is_readonly:
             # A property overriding a writable attribute.
-            return "  # ty: ignore[invalid-property-type-override]"
+            return "  # ty: ignore[incompatible-property-override]"
         # An attribute that adds `None` to the base's type does not narrow
         # it, and stays reported as an incompatible override.
         adds_none = dtype_str.endswith(" | None") and \
             not base_dtype_str.endswith(" | None")
         if not is_readonly and not base_is_readonly and not adds_none \
                 and dtype_str != base_dtype_str:
-            return "  # ty: ignore[invalid-mutable-override]"
+            return "  # ty: ignore[incompatible-mutable-override]"
         return ""
 
     def _collect_class_attributes(self, document: nodes.document) -> None:
