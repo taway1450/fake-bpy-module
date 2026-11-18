@@ -256,6 +256,10 @@
 
       :type value: :class:`Quaternion`
 
+   .. method:: __neg__()
+
+      :rtype: :class:`Quaternion`
+
    .. method:: __len__()
 
       :rtype: int
@@ -341,6 +345,10 @@
 
 .. class:: Vector
 
+   .. base-class:: collections.abc.Sequence[float]
+
+      :mod-option base-class: skip-refine
+
    .. method:: __init__(seq=(0.0, 0.0, 0.0))
 
       :type seq: Sequence[float]
@@ -384,6 +392,31 @@
       :type value: collections.abc.Iterable[float] | :class:`Vector`
       :mod-option arg value: skip-refine
       :option function: overload
+
+   .. method:: __iter__()
+
+      :rtype: collections.abc.Iterator[float]
+      :mod-option rtype: skip-refine
+
+   .. method:: __lt__(other)
+
+      :type other: :class:`Vector`
+      :rtype: bool
+
+   .. method:: __le__(other)
+
+      :type other: :class:`Vector`
+      :rtype: bool
+
+   .. method:: __gt__(other)
+
+      :type other: :class:`Vector`
+      :rtype: bool
+
+   .. method:: __ge__(other)
+
+      :type other: :class:`Vector`
+      :rtype: bool
 
    .. method:: __neg__()
 
@@ -467,3 +500,34 @@
 
       :type other: float
       :rtype: :class:`Vector`
+
+.. class:: MatrixAccess
+
+   .. method:: __getitem__(key)
+
+      :type key: int
+      :rtype: :class:`Vector`
+      :option function: overload
+
+   .. method:: __getitem__(key)
+
+      :type key: slice
+      :mod-option arg key: skip-refine
+      :rtype: tuple[:class:`Vector`, ...]
+      :mod-option rtype: skip-refine
+      :option function: overload
+
+   .. method:: __setitem__(key, value)
+
+      :type key: int
+      :type value: collections.abc.Sequence[float]
+      :mod-option arg value: skip-refine
+
+   .. method:: __iter__()
+
+      :rtype: collections.abc.Iterator[:class:`Vector`]
+      :mod-option rtype: skip-refine
+
+   .. method:: __len__()
+
+      :rtype: int
