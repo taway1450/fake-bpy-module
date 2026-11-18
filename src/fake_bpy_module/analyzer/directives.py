@@ -4,6 +4,7 @@ from typing import ClassVar
 
 from docutils import nodes
 from docutils.parsers import rst
+from docutils.statemachine import StringList
 
 from fake_bpy_module import config
 from fake_bpy_module.utils import (
@@ -314,10 +315,55 @@ class ClassDirective(rst.Directive):
         r"([a-zA-Z0-9_.]+)(\([a-zA-Z0-9_,=. ]+\))")
     _CLASS_NAME_REGEX = re.compile(r"([a-zA-Z0-9_.]+)")
 
+    _CLASS_ARG_FIELD_REGEX = re.compile(r":(arg|param|type)\s+([a-zA-Z0-9_]+):")
+    _INIT_METHOD_REGEX = re.compile(r"\.\.\s+method::\s+__init__\s*\(")
+
+    def _content_with_init(self) -> list[str] | None:
+        """The class content with an ``__init__`` method made from the class
+        signature, when the signature has arguments, the class documents each
+        of them with its own fields and no ``__init__`` is documented.
+        A signature naming base classes (``ClassA(BaseClassA)``) documents no
+        arguments, so it gets none.
+
+        Ex: ``.. class:: Sound(filename, stream=0)`` with ``:arg filename:``
+            and ``:arg stream:`` -> ``.. method:: __init__(filename, stream=0)``
+        """
+        m = self._CLASS_NAME_WITH_ARGS_REGEX.match(self.arguments[0])
+        if not m:
+            return None
+        lines = list(self.content)
+        if any(self._INIT_METHOD_REGEX.match(line.strip()) for line in lines):
+            return None
+
+        # The class-level argument fields, each with its continuation lines.
+        fields: list[str] = []
+        documented: set[str] = set()
+        in_field = False
+        for line in lines:
+            if field := self._CLASS_ARG_FIELD_REGEX.match(line):
+                documented.add(field.group(2))
+                in_field = True
+                fields.append(line)
+            elif in_field and line.startswith(" ") and line.strip():
+                fields.append(line)
+            else:
+                in_field = False
+
+        args = [a.strip().split("=")[0].strip()
+                for a in m.group(2)[1:-1].split(",")]
+        if not args or not documented.issuperset(args):
+            return None
+
+        return [*lines, "", f".. method:: __init__{m.group(2)}", "",
+                *[f"   {line}" for line in fields]]
+
     def run(self) -> list[ClassNode]:
         paragraph_node = nodes.paragraph()
+        content = self.content
+        if (init_content := self._content_with_init()) is not None:
+            content = StringList(init_content, self.content.source(0))
         self.state.nested_parse(
-            self.content, self.content_offset, paragraph_node)
+            content, self.content_offset, paragraph_node)
 
         class_node = ClassNode.create_template()
         class_name = self.arguments[0]

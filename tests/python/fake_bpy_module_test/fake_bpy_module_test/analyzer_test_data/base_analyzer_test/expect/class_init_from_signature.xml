@@ -1,0 +1,82 @@
+<document source="<string>">
+    <source-filename>
+        class_init_from_signature.rst
+    <module>
+        <name>
+            module_1
+        <description>
+    <class>
+        <name>
+            ClassA
+        <description>
+            Description of ClassA.
+        <base-class-list>
+        <attribute-list>
+        <function-list>
+            <function function_type="method">
+                <name>
+                    method_1
+                <description>
+                <argument-list>
+                <return>
+                    <description>
+                    <data-type-list>
+            <function function_type="method">
+                <name>
+                    __init__
+                <description>
+                <argument-list>
+                    <argument argument_type="arg">
+                        <name>
+                            filename
+                        <description>
+                            Path of the file.
+                        <default-value>
+                        <data-type-list>
+                            <data-type>
+                                str
+                    <argument argument_type="arg">
+                        <name>
+                            stream
+                        <description>
+                            The index of the stream,
+                            0 by default.
+                        <default-value>
+                            0
+                        <data-type-list>
+                            <data-type>
+                                int
+                <return>
+                    <description>
+                    <data-type-list>
+    <class>
+        <name>
+            ClassB
+        <description>
+        <base-class-list>
+        <attribute-list>
+        <function-list>
+            <function function_type="method">
+                <name>
+                    __init__
+                <description>
+                <argument-list>
+                    <argument argument_type="arg">
+                        <name>
+                            arg_1
+                        <description>
+                        <default-value>
+                        <data-type-list>
+                            <data-type>
+                                float
+                <return>
+                    <description>
+                    <data-type-list>
+    <class>
+        <name>
+            ClassC
+        <description>
+            Description of ClassC.
+        <base-class-list>
+        <attribute-list>
+        <function-list>
