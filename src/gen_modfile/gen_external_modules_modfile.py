@@ -86,6 +86,7 @@ IGNORE_DOC_REGEX_LIST = {
     re.compile(r"^_bpy_types._RNAMetaPropGroup$"),
 }
 
+# Read by fake_bpy_module.source_stub (SOURCE_MODULES_FILENAME there).
 SOURCE_MODULES_FILENAME = "source_modules.json"
 
 # The Python half of bpy.types (renamed _bpy_types in Blender 5.0). Its
@@ -457,14 +458,68 @@ def write_to_json_modfile(data: Dict, config: 'GenerationConfig') -> None:
 def write_source_module_list(modules: List, config: 'GenerationConfig') -> None:
     # gen.py writes the stubs of these modules from their source (see
     # fake_bpy_module.source_stub), over the ones made from the modfiles.
+    # The classes of BPY_TYPES_MODULES are bpy.types classes, whose stubs
+    # come from the API docs.
     os.makedirs(config.output_dir, exist_ok=True)
     source_files = {
         m["module_name"]: m["module"].__file__
-        for m in modules if getattr(m["module"], "__file__", None)
+        for m in modules
+        if getattr(m["module"], "__file__", None)
+        and m["module_name"] not in BPY_TYPES_MODULES
     }
     filename = "{}/{}".format(config.output_dir, SOURCE_MODULES_FILENAME)
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(source_files, f, indent=4, sort_keys=True)
+
+
+def metaclass_attributes(class_: type) -> Dict[str, str]:
+    """Return the class attributes the metaclass of ``class_`` gives it.
+
+    These are the metaclass's properties, each with the type of its value on
+    ``class_``, unless a base of ``class_`` has the same metaclass.
+
+    Ex: a class with metaclass _bpy_types._RNAMeta -> {"is_registered": "bool"}
+    """
+    # A base with the same metaclass declares them already.
+    if any(type(base) is type(class_) for base in class_.__bases__):
+        return {}
+    attributes = {}
+    for meta in type(class_).__mro__:
+        if meta is type:
+            break
+        for name, value in vars(meta).items():
+            if isinstance(value, property) and not name.startswith("_"):
+                attributes.setdefault(
+                    name, type(getattr(class_, name)).__name__)
+    return attributes
+
+
+# pylint: disable=C0209
+def write_metaclass_attribute_modfiles(
+        modules: List, config: 'GenerationConfig') -> None:
+    # The classes of BPY_TYPES_MODULES are bpy.types classes, documented by
+    # the API docs. What their metaclass gives them (_RNAMeta.is_registered)
+    # is appended to those classes.
+    os.makedirs(config.output_dir, exist_ok=True)
+    bpy_types = set(dir(bpy.types))
+    for m in modules:
+        if m["module_name"] not in BPY_TYPES_MODULES:
+            continue
+        for name, class_ in inspect.getmembers(m["module"], inspect.isclass):
+            if class_.__module__ != m["module_name"] or name not in bpy_types:
+                continue
+            attributes = metaclass_attributes(class_)
+            if not attributes:
+                continue
+            mod_filename = "{}/bpy.types.{}.mod.rst".format(
+                config.output_dir, name)
+            with open(mod_filename, "w", encoding="utf-8") as f:
+                f.write(".. mod-type:: append\n\n")
+                f.write(".. module:: bpy.types\n\n")
+                f.write(".. class:: {}\n\n".format(name))
+                for attr_name, attr_type in sorted(attributes.items()):
+                    f.write("   .. attribute:: {}\n\n".format(attr_name))
+                    f.write("      :type: {}\n\n".format(attr_type))
 
 
 def write_to_modfile(info: Dict, config: 'GenerationConfig') -> None:
@@ -581,6 +636,8 @@ def main() -> None:
     # Write module info to file.
     write_to_modfile(results, config)
     write_source_module_list(imported_modules, config)
+    if config.output_format == "rst":
+        write_metaclass_attribute_modfiles(imported_modules, config)
 
 
 if __name__ == "__main__":

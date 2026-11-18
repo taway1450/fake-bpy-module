@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 import tempfile
 import types
@@ -99,3 +100,54 @@ class GenExternalModulesModfileTest(common.FakeBpyModuleTestBase):
         self.assertEqual(
             ["bpy.types.Menu"],
             results["module_1"]["classes"][0]["base_classes"])
+
+    def test_source_module_list_leaves_out_the_bpy_types_python_half(
+            self) -> None:
+        # Its classes are bpy.types classes, stubbed from the API docs.
+        gen = load_gen_external_modules_modfile([])
+        modules = []
+        for name in ("_bpy_types", "bpy_types", "module_1"):
+            module = types.ModuleType(name)
+            module.__file__ = f"/scripts/modules/{name}.py"
+            modules.append({"module_name": name, "module": module})
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            config = gen.GenerationConfig()
+            config.output_dir = output_dir
+            gen.write_source_module_list(modules, config)
+            listed = json.loads(
+                Path(output_dir, "source_modules.json").read_text(
+                    encoding="utf-8"))
+
+        self.assertEqual({"module_1": "/scripts/modules/module_1.py"}, listed)
+
+    def test_metaclass_property_is_a_class_attribute_in_bpy_types(
+            self) -> None:
+        # _bpy_types._RNAMeta gives every class of its own is_registered. A
+        # subclass inherits it from its base (NodeInternal from Node).
+        gen = load_gen_external_modules_modfile(["Menu", "SubMenu", "Bone"])
+        bpy_types = fake_module("_bpy_types", (
+            "class _RNAMeta(type):\n"
+            "    @property\n"
+            "    def is_registered(cls):\n"
+            "        return 'bl_rna' in cls.__dict__\n"
+            "class _GenericUI:\n    pass\n"
+            "class Menu(_GenericUI, metaclass=_RNAMeta):\n    pass\n"
+            "class SubMenu(Menu):\n    pass\n"
+            "class Bone:\n    pass\n"))
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            config = gen.GenerationConfig()
+            config.output_dir = output_dir
+            gen.write_metaclass_attribute_modfiles(
+                [{"module_name": "_bpy_types", "module": bpy_types}], config)
+            modfiles = {p.name: p.read_text(encoding="utf-8")
+                        for p in Path(output_dir).iterdir()}
+
+        self.log(str(modfiles))
+        self.assertEqual({"bpy.types.Menu.mod.rst": (
+            ".. mod-type:: append\n\n"
+            ".. module:: bpy.types\n\n"
+            ".. class:: Menu\n\n"
+            "   .. attribute:: is_registered\n\n"
+            "      :type: bool\n\n")}, modfiles)
