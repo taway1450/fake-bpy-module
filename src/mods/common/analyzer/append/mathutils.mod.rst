@@ -6,7 +6,8 @@
 
    .. method:: __init__(rgb=(0.0, 0.0, 0.0))
 
-      :type rgb: Sequence[float]
+      :type rgb: collections.abc.Iterable[float]
+      :mod-option arg rgb: skip-refine
 
    .. method:: __get__(instance, owner)
 
@@ -114,7 +115,8 @@
 
    .. method:: __init__(angles=(0.0, 0.0, 0.0), order='XYZ')
 
-      :type angles: Sequence[float]
+      :type angles: collections.abc.Iterable[float]
+      :mod-option arg angles: skip-refine
       :type order: str
 
    .. method:: __get__(instance, owner)
@@ -263,7 +265,8 @@
 
    .. method:: __init__(seq=(1.0, 0.0, 0.0, 0.0), angle=0.0)
 
-      :type seq: :class:`Vector`
+      :type seq: collections.abc.Iterable[float]
+      :mod-option arg seq: skip-refine
       :type angle: float
 
    .. method:: __get__(instance, owner)
@@ -375,7 +378,8 @@
 
    .. method:: __init__(seq=(0.0, 0.0, 0.0))
 
-      :type seq: Sequence[float]
+      :type seq: collections.abc.Iterable[float]
+      :mod-option arg seq: skip-refine
 
    .. method:: __get__(instance, owner)
 
