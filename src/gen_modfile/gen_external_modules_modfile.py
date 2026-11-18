@@ -88,6 +88,10 @@ IGNORE_DOC_REGEX_LIST = {
 
 SOURCE_MODULES_FILENAME = "source_modules.json"
 
+# The Python half of bpy.types (renamed _bpy_types in Blender 5.0). Its
+# classes are bpy.types classes, so only _GenericUI stays in the module.
+BPY_TYPES_MODULES = {"bpy_types", "_bpy_types"}
+
 CLASS_DEFAULT_VALUE_REGEX = re.compile(r"<(.+)[^<]*>")
 
 
@@ -251,7 +255,7 @@ def analyze_class(module_name: str, class_: tuple) -> Dict:
         if fullname not in base_class_fullnames:
             continue
 
-        if c.__module__ == "bpy_types" and c.__name__ != "_GenericUI":
+        if c.__module__ in BPY_TYPES_MODULES and c.__name__ != "_GenericUI":
             class_def["base_classes"].append("bpy.types.{}".format(c.__name__))
         elif c.__module__ == "builtins":
             if c.__name__ in ("dict"):
@@ -316,7 +320,7 @@ def analyze_module(module_name: str, module: object) -> Dict:
         class_def = analyze_class(module_name, c)
 
         # Only class _GenericUI is allowd in bpy_types module.
-        if module_name == "bpy_types":
+        if module_name in BPY_TYPES_MODULES:
             if class_def["name"] != "_GenericUI":
                 continue
 
@@ -432,8 +436,12 @@ def write_to_rst_modfile(data: Dict, config: 'GenerationConfig') -> None:
                 if constant_info["description"] is not None:
                     write_description(f, constant_info["description"], "   ")
                 if "data_type" in constant_info:
-                    f.write("   :type: {}\n\n".format(
+                    f.write("   :type: {}\n".format(
                         constant_info["data_type"]))
+                if "option" in constant_info:
+                    f.write("   :option data: {}\n".format(
+                        constant_info["option"]))
+                f.write("\n")
                 f.close()
 
 
@@ -500,6 +508,8 @@ def get_alias_to_bpy_types(results: dict) -> dict:
                     "module": "bpy.types",
                     "data_type": ":class:`{}.{}`".format(
                         c["module"], c["name"]),
+                    # bpy.types.X is the registered class itself.
+                    "option": "class-alias",
                 }
                 alias["constants"].append(constant_def)
 

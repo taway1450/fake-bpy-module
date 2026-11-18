@@ -64,6 +64,8 @@ def main() -> None:
 
         fake_bpy_module_test.integration_test.IntegrationTest,
 
+        fake_bpy_module_test.gen_modfile_test.GenExternalModulesModfileTest,
+
         fake_bpy_module_test.utils_test.UtilsTest,
 
         fake_bpy_module_test.source_stub_test.SourceStubTest,
