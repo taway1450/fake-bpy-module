@@ -242,3 +242,51 @@ class IntegrationTest(common.FakeBpyModuleTestBase):
         self.log(stub)
         self.assertIn("class ClassA:", stub)
         self.assertIn("class _ClassA_X:", stub)
+
+    def test_class_signature_bases(self) -> None:
+        # Blender's API docs name a class's bases in its signature, as a
+        # class statement does. A "base classes" line, where a page has one,
+        # lists every base and wins.
+        input_dir = Path(self.output_dir) / "input"
+        input_dir.mkdir()
+        (input_dir / "module_1.rst").write_text(textwrap.dedent("""\
+            .. module:: module_1
+
+            .. class:: BaseA
+
+            .. class:: BaseB
+
+            .. class:: ClassA(BaseA, BaseB)
+
+            .. class:: ClassB(arg_1)
+
+               :arg arg_1: Argument 1.
+               :type arg_1: int
+
+            .. class:: ClassC(BaseB, metaclass=type)
+            """), encoding="utf-8")
+        (input_dir / "module_1.ClassD.rst").write_text(textwrap.dedent("""\
+            ClassD(BaseB)
+            =============
+
+            .. currentmodule:: module_1
+
+            base classes --- :class:`BaseA`, :class:`BaseB`
+
+            .. class:: ClassD(BaseB)
+            """), encoding="utf-8")
+
+        config.set_output_format("pyi")
+        documents = analyze([str(input_dir / "module_1.rst"),
+                             str(input_dir / "module_1.ClassD.rst")])
+        documents = transform(documents, [])
+        generate(documents)
+
+        stub = (Path(self.output_dir) / "module_1-stubs" / "__init__.pyi"
+                ).read_text(encoding="utf-8")
+        self.log(stub)
+        self.assertIn("class ClassA(BaseA, BaseB):", stub)
+        self.assertIn("class ClassB:", stub)
+        self.assertIn("def __init__(self, arg_1: int)", stub)
+        self.assertIn("class ClassC(BaseB):", stub)
+        self.assertIn("class ClassD(BaseB, BaseA):", stub)

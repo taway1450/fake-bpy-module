@@ -1,4 +1,4 @@
-.. mod-type:: append
+.. mod-type:: update
 
 .. module:: bpy.utils.previews
 

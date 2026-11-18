@@ -357,6 +357,34 @@ class ClassDirective(rst.Directive):
         return [*lines, "", f".. method:: __init__{m.group(2)}", "",
                 *[f"   {line}" for line in fields]]
 
+    def _signature_bases(self) -> list[str]:
+        """Return the base classes the class signature names.
+
+        The signature names them as a class statement does: the plain names
+        in it that the class documents no argument fields for. A signature
+        with a default value is a constructor's and names no bases;
+        ``metaclass=`` is skipped.
+
+        Ex: ``.. class:: _Object_MESH(Object)`` -> ``["Object"]``
+            ``.. class:: KDTree(size)`` with ``:arg size:`` -> ``[]``
+            ``.. class:: GPUBatch(type, buf, elem=None)`` -> ``[]``
+        """
+        m = self._CLASS_NAME_WITH_ARGS_REGEX.match(self.arguments[0])
+        if not m:
+            return []
+        try:
+            class_def = ast.parse(f"class _{m.group(2)}: pass").body[0]
+        except SyntaxError:
+            return []
+        if any(kw.arg != "metaclass" for kw in class_def.keywords):
+            return []
+        documented = {field.group(2) for line in self.content
+                      if (field := self._CLASS_ARG_FIELD_REGEX.match(line))}
+        bases = [b.id for b in class_def.bases if isinstance(b, ast.Name)]
+        if documented.intersection(bases):
+            return []
+        return bases
+
     def run(self) -> list[ClassNode]:
         paragraph_node = nodes.paragraph()
         content = self.content
@@ -390,6 +418,11 @@ class ClassDirective(rst.Directive):
 
         # Get all attributes and methods.
         base_class_list_node = class_node.element(BaseClassListNode)
+        for base in self._signature_bases():
+            base_class_node = BaseClassNode.create_template()
+            base_class_node.element(DataTypeListNode).append_child(
+                make_data_type_node(f"`{base}`"))
+            base_class_list_node.append_child(base_class_node)
         attr_list_node = class_node.element(AttributeListNode)
         method_list_node = class_node.element(FunctionListNode)
         for child in paragraph_node.children:

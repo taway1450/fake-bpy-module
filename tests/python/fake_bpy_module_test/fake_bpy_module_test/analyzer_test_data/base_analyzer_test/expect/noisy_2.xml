@@ -19,6 +19,16 @@
         <description>
             ClassA description
         <base-class-list>
+            <base-class>
+                <data-type-list>
+                    <data-type>
+                        <class-ref>
+                            BaseClass1
+            <base-class>
+                <data-type-list>
+                    <data-type>
+                        <class-ref>
+                            BaseClass2
         <attribute-list>
             <attribute>
                 <name>
@@ -72,6 +82,11 @@
             ClassB
             description
         <base-class-list>
+            <base-class>
+                <data-type-list>
+                    <data-type>
+                        <class-ref>
+                            BaseClass1
         <attribute-list>
             <attribute>
                 <name>

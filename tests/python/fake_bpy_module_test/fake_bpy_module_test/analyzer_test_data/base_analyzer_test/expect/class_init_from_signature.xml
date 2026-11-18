@@ -78,5 +78,10 @@
         <description>
             Description of ClassC.
         <base-class-list>
+            <base-class>
+                <data-type-list>
+                    <data-type>
+                        <class-ref>
+                            BaseClassA
         <attribute-list>
         <function-list>

@@ -17,5 +17,15 @@
             ClassB
         <description>
         <base-class-list>
+            <base-class>
+                <data-type-list>
+                    <data-type>
+                        <class-ref>
+                            BaseClassA
+            <base-class>
+                <data-type-list>
+                    <data-type>
+                        <class-ref>
+                            BaseClassB
         <attribute-list>
         <function-list>

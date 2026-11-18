@@ -47,7 +47,10 @@ class BaseClassFixture(TransformerBase):
                 base_classes.reverse()
                 class_nodes = find_children(document, ClassNode)
                 for class_node in class_nodes:
+                    # The line lists every base class, so it replaces the
+                    # ones the class signature names.
                     base_class_list_node = class_node.element(BaseClassListNode)
+                    base_class_list_node.clear()
                     for bc in base_classes:
                         base_class_node = BaseClassNode.create_template()
                         base_class_node.element(DataTypeListNode).append_child(
