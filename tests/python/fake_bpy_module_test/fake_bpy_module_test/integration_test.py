@@ -346,3 +346,49 @@ class IntegrationTest(common.FakeBpyModuleTestBase):
         view = stub[stub.index("class _ClassA_X(ClassA):"):]
         self.assertIn("    data: ClassB  #", view)
         self.assertIn("    other: ClassB | None\n", view)
+
+    def test_collection_of_union(self) -> None:
+        # A collection whose items are one of several classes
+        # (GreasePencil.root_nodes holds layers and layer groups).
+        input_dir = Path(self.output_dir) / "input"
+        input_dir.mkdir()
+        (input_dir / "bpy.types.ClassA.rst").write_text(textwrap.dedent("""\
+            ClassA
+            ======
+
+            .. currentmodule:: bpy.types
+
+            .. class:: bpy_prop_collection
+
+            .. class:: ClassA
+
+               .. data:: items
+
+                  (readonly)
+
+                  :type: UNION_COLLECTION
+
+               .. data:: single
+
+                  (readonly)
+
+                  :type: :class:`bpy_prop_collection`\\ [:class:`ClassB`]
+
+            .. class:: ClassB
+
+            .. class:: ClassC
+            """).replace(
+                "UNION_COLLECTION",
+                ":class:`bpy_prop_collection`\\ "
+                "[:class:`ClassB` | :class:`ClassC`]"), encoding="utf-8")
+
+        config.set_output_format("pyi")
+        documents = analyze([str(input_dir / "bpy.types.ClassA.rst")])
+        documents = transform(documents, [])
+        generate(documents)
+
+        stub = (Path(self.output_dir) / "bpy-stubs" / "types" / "__init__.pyi"
+                ).read_text(encoding="utf-8")
+        self.log(stub)
+        self.assertIn("bpy_prop_collection[ClassB]", stub)
+        self.assertIn("bpy_prop_collection[ClassB | ClassC]", stub)

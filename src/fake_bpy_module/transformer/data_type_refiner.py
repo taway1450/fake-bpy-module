@@ -64,6 +64,7 @@ REGEX_MATCH_DATA_TYPE_V_BPY_PROP_COLLECTION_OF_SIMPLE = re.compile(r"^`([a-zA-Z0
 REGEX_MATCH_DATA_TYPE_SEQUENCE_OF = re.compile(r"^sequence of\s+`([a-zA-Z0-9_.]+)`$")  # noqa: E501
 REGEX_MATCH_DATA_TYPE_BPY_PROP_COLLECTION_OF = re.compile(r"^`bpy_prop_collection` of `([a-zA-Z0-9]+)`")  # noqa: E501
 REGEX_MATCH_DATA_TYPE_BPY_PROP_COLLECTION_OF_SIMPLE = re.compile(r"^`bpy_prop_collection`\[`([a-zA-Z0-9]+)`\]")  # noqa: E501
+REGEX_MATCH_DATA_TYPE_BPY_PROP_COLLECTION_OF_UNION = re.compile(r"^`bpy_prop_collection`\[(`[a-zA-Z0-9]+`(?: \| `[a-zA-Z0-9]+`)+)\]$")  # noqa: E501
 REGEX_MATCH_DATA_TYPE_BPY_PROP_ARRAY_OF_SIMPLE = re.compile(r"^`bpy_prop_array`\[([a-zA-Z0-9]+)\]")  # noqa: E501
 REGEX_MATCH_DATA_TYPE_LIST_OF_VALUE_OBJECTS = re.compile(r"^List of `([A-Za-z0-9]+)` objects$")  # noqa: E501
 REGEX_MATCH_DATA_TYPE_LIST_OF_VALUE = re.compile(r"^[Ll]ist of `([A-Za-z0-9_.]+)`$")  # noqa: E501
@@ -485,6 +486,20 @@ class DataTypeRefiner(TransformerBase):
             if s:
                 return [make_data_type_node(
                     f"`bpy.types.bpy_prop_collection`[`{s}`]")]
+        # [Ex] `bpy_prop_collection`[`GreasePencilLayer` |
+        #     `GreasePencilLayerGroup`]
+        if m := REGEX_MATCH_DATA_TYPE_BPY_PROP_COLLECTION_OF_UNION.match(
+                dtype_str):
+            items = [
+                self._parse_custom_data_type(
+                    item.strip(" `"), uniq_full_names, uniq_module_names,
+                    module_name)
+                for item in m.group(1).split("|")
+            ]
+            if all(items):
+                union = " | ".join(f"`{item}`" for item in items)
+                return [make_data_type_node(
+                    f"`bpy.types.bpy_prop_collection`[{union}]")]
         # [Ex] `bpy_prop_array`[int]
         if m := REGEX_MATCH_DATA_TYPE_BPY_PROP_ARRAY_OF_SIMPLE.match(
                 dtype_str):
