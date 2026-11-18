@@ -104,15 +104,6 @@
       :type: :class:`bpy.types.ShaderNodeTree` | None
       :mod-option: skip-refine
 
-.. class:: Material
-
-   .. attribute:: node_tree
-
-      Node tree for node based materials
-
-      :type: :class:`bpy.types.ShaderNodeTree` | None
-      :mod-option: skip-refine
-
 .. class:: Scene
 
    .. attribute:: node_tree
@@ -129,15 +120,6 @@
       Node tree for node-based textures
 
       :type: :class:`bpy.types.TextureNodeTree` | None
-      :mod-option: skip-refine
-
-.. class:: World
-
-   .. attribute:: node_tree
-
-      Node tree for node based worlds
-
-      :type: :class:`bpy.types.ShaderNodeTree` | None
       :mod-option: skip-refine
 
 .. class:: CompositorNodeGroup
