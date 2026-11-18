@@ -401,21 +401,25 @@
    .. method:: __lt__(other)
 
       :type other: :class:`Vector`
+      :mod-option arg other: skip-refine
       :rtype: bool
 
    .. method:: __le__(other)
 
       :type other: :class:`Vector`
+      :mod-option arg other: skip-refine
       :rtype: bool
 
    .. method:: __gt__(other)
 
       :type other: :class:`Vector`
+      :mod-option arg other: skip-refine
       :rtype: bool
 
    .. method:: __ge__(other)
 
       :type other: :class:`Vector`
+      :mod-option arg other: skip-refine
       :rtype: bool
 
    .. method:: __neg__()
