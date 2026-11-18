@@ -131,6 +131,10 @@
 
    :generic-types: _GenericType1
 
+   .. base-class:: collections.abc.Sequence[_GenericType1]
+
+      :mod-option base-class: skip-refine
+
    .. method:: __get__(instance, owner)
 
       :rtype: :class:`bpy_prop_array`\ [_GenericType1]
@@ -199,7 +203,7 @@
 
    .. method:: __getitem__(key)
 
-      :type key: int | str | tuple[str, ...]
+      :type key: int | str | tuple[str, str | None]
       :mod-option arg key: skip-refine
       :rtype: _GenericType1
       :mod-option rtype: skip-refine
