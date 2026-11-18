@@ -5,6 +5,14 @@ from docutils.core import publish_doctree
 
 from fake_bpy_module import config
 from fake_bpy_module.analyzer.analyzer import BaseAnalyzer
+from fake_bpy_module.analyzer.nodes import (
+    AttributeListNode,
+    AttributeNode,
+    ClassNode,
+    DataTypeListNode,
+    DataTypeNode,
+    NameNode,
+)
 from fake_bpy_module.transformer.data_type_refiner import EntryPoint
 from fake_bpy_module.transformer.transformer import Transformer
 
@@ -15,6 +23,7 @@ from fake_bpy_module.transformer.utils import (
     get_base_name,
     get_module_name,
 )
+from fake_bpy_module.utils import find_children, get_first_child
 
 from . import common
 
@@ -968,6 +977,42 @@ class DataTypeRefinerTest(TransformerTestBase):
         for trans, expect in zip(transformed, expect_transformed_files,
                                  strict=True):
             self.compare_with_file_contents(trans.pformat(), expect)
+
+    def test_never_none_rna(self) -> None:
+        rst_files = [f"{self.data_dir}/input/never_none_rna.rst"]
+        documents = BaseAnalyzer().analyze(rst_files)
+
+        entry_points = [
+            EntryPoint("bpy.types", name, "class")
+            for name in ("Struct", "SceneRenderView", "Material", "Object")
+        ]
+        transformer = Transformer(["data_type_refiner"], {
+            "data_type_refiner": {"entry_points": entry_points}
+        })
+        transformed = transformer.transform(documents)
+
+        options = {}
+        for class_node in find_children(transformed[0], ClassNode):
+            class_name = class_node.element(NameNode).astext()
+            attr_list_node = class_node.element(AttributeListNode)
+            for attr_node in find_children(attr_list_node, AttributeNode):
+                attr_name = attr_node.element(NameNode).astext()
+                dtype_node = get_first_child(
+                    attr_node.element(DataTypeListNode), DataTypeNode)
+                options[f"{class_name}.{attr_name}"] = \
+                    dtype_node.attributes["option"]
+
+        self.assertEqual(options, {
+            # Every struct has its RNA type.
+            "bpy_struct.bl_rna": "never none",
+            # The RST says never None: an active pointer keeps it.
+            "RenderViews.active": "never none",
+            # An int is never None, active or not.
+            "RenderViews.active_index": "never none",
+            # A pointer the RST does not flag can be None.
+            "Object.active_material": "accept none",
+            "Object.parent": "",
+        })
 
     def test_description_dependency(self) -> None:
         rst_files = ["description_dependency.rst"]

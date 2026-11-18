@@ -68,7 +68,7 @@
                     active_attr
                 <description>
                 <data-type-list>
-                    <data-type option="accept none">
+                    <data-type option="never none">
                         int
         <function-list>
     <class>
@@ -131,7 +131,7 @@
             active_data
         <description>
         <data-type-list>
-            <data-type option="accept none">
+            <data-type option="never none">
                 int
     <data>
         <name>
