@@ -14,7 +14,7 @@ from fake_bpy_module.analyzer.nodes import (
     FunctionReturnNode,
     NameNode,
 )
-from fake_bpy_module.utils import find_children
+from fake_bpy_module.utils import find_children, is_class_alias
 
 from .transformer_base import TransformerBase
 
@@ -210,6 +210,19 @@ class DuplicationRemover(TransformerBase):
         for data_node in data_nodes_to_remove:
             document.remove(data_node)
 
+    def _remove_classes_replaced_by_aliases(
+            self, document: nodes.document) -> None:
+        # bpy.types documents a registered class and also aliases it to the
+        # class its Python module defines: the alias is the class itself.
+        alias_names = {
+            data_node.element(NameNode).astext()
+            for data_node in find_children(document, DataNode)
+            if is_class_alias(data_node)
+        }
+        for class_node in find_children(document, ClassNode):
+            if class_node.element(NameNode).astext() in alias_names:
+                document.remove(class_node)
+
     def _apply(self, document: nodes.document) -> None:
         class_nodes = find_children(document, ClassNode)
         for class_node in class_nodes:
@@ -224,6 +237,7 @@ class DuplicationRemover(TransformerBase):
             self._remove_duplicated_arguments(func_node)
 
         self._remove_duplicated_classes(document)
+        self._remove_classes_replaced_by_aliases(document)
         self._remove_duplicated_functions(document)
         self._remove_duplicated_data(document)
 

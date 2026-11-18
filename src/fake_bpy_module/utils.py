@@ -55,6 +55,15 @@ def append_child(node: nodes.Node, item: nodes.Node) -> nodes.Node:
     return item
 
 
+def is_class_alias(data_node: nodes.Node) -> bool:
+    """Tell whether a data node is a class itself, not an instance of it.
+
+    Its type names the class: ``:option data: class-alias``.
+    """
+    options = data_node.attributes.get("option", "").split(",")
+    return "class-alias" in (o.strip() for o in options)
+
+
 # pylint: disable=R0912,R0915
 def split_string_by(line: str, separator: str,
                     workaround_special_brace_case: bool) -> list:

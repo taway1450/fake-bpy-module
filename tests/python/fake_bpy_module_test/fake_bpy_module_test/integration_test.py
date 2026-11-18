@@ -1,4 +1,5 @@
 import shutil
+import textwrap
 from pathlib import Path
 
 from fake_bpy_module import config  # pylint: disable=E0401
@@ -156,3 +157,41 @@ class IntegrationTest(common.FakeBpyModuleTestBase):
                 self.assertEqual(expect_contents, actual_contents)
 
             self.assertFalse(self.__is_py_typed_exist(f"{self.output_dir}/py.typed"))
+
+    def test_class_alias(self) -> None:
+        # Blender registers the classes of its Python modules in bpy.types:
+        # bpy.types.ClassA is module_1.ClassA itself, not an instance of it.
+        input_dir = Path(self.output_dir) / "input"
+        input_dir.mkdir()
+        (input_dir / "module_1.rst").write_text(textwrap.dedent("""\
+            .. module:: module_1
+
+            .. class:: ClassA
+
+               .. method:: execute(context)
+
+                  :type context: int
+            """), encoding="utf-8")
+        (input_dir / "module_2.rst").write_text(textwrap.dedent("""\
+            .. module:: module_2
+
+            .. class:: ClassA
+
+            .. data:: ClassA
+
+               :type: :class:`module_1.ClassA`
+               :option data: class-alias
+            """), encoding="utf-8")
+
+        config.set_output_format("pyi")
+        documents = analyze([str(input_dir / "module_1.rst"),
+                             str(input_dir / "module_2.rst")])
+        documents = transform(documents, [])
+        generate(documents)
+
+        stub = (Path(self.output_dir) / "module_2-stubs" / "__init__.pyi"
+                ).read_text(encoding="utf-8")
+        self.log(stub)
+        self.assertIn("ClassA = module_1.ClassA\n", stub)
+        self.assertNotIn("class ClassA", stub)
+        self.assertNotIn("ClassA:", stub)

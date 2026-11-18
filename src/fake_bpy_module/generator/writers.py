@@ -40,6 +40,7 @@ from fake_bpy_module.analyzer.nodes import (
 from fake_bpy_module.utils import (
     find_children,
     get_first_child,
+    is_class_alias,
     remove_unencodable,
 )
 
@@ -631,7 +632,12 @@ class PyCodeWriterBase(BaseWriter):
         if "deprecated" in data_node.attributes:
             desc_node.insert(0, nodes.Text(data_node.attributes["deprecated"]))
 
-        if not dtype_list_node.empty():
+        if is_class_alias(data_node):
+            # The data is the class itself (bpy.types.X is the registered
+            # class X), so it is an alias, not an instance.
+            dtype_nodes = find_children(dtype_list_node, DataTypeNode)
+            wt.addln(f"{name_node.astext()} = {make_union(dtype_nodes)}")
+        elif not dtype_list_node.empty():
             dtype_nodes = find_children(dtype_list_node, DataTypeNode)
             dtype = make_union(dtype_nodes)
             for dtype_node in dtype_nodes:
