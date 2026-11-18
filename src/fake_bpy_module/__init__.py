@@ -1,4 +1,4 @@
-from . import config, support
+from . import config, source_stub, support
 from .analyzer.analyzer import analyze
 from .generator.generator import generate
 from .transformer.transformer import transform
@@ -9,6 +9,7 @@ __all__ = [
     "check_os",
     "config",
     "generate",
+    "source_stub",
     "support",
     "transform",
 ]

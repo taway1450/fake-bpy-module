@@ -1,6 +1,8 @@
 # coding: UTF-8
 
 import argparse
+import json
+import re
 from pathlib import Path
 
 import fake_bpy_module as fbm
@@ -8,10 +10,34 @@ import fake_bpy_module as fbm
 MOD_FILES_DIR: str = Path(Path(__file__).resolve()).parent
 
 
+MODULE_DIRECTIVE = re.compile(r"^\.\. (?:py:)?module:: (\S+)\s*$", re.MULTILINE)
+
+
+def documented_modules(target_files: list[str]) -> set[str]:
+    modules = set()
+    for f in target_files:
+        modules.update(MODULE_DIRECTIVE.findall(
+            Path(f).read_text(encoding="utf-8", errors="replace")))
+    return modules
+
+
+def source_module_files() -> dict[str, Path]:
+    module_files = {}
+    for p in sorted(Path(f"{MOD_FILES_DIR}/mods/generated_mods").rglob(
+            "source_modules.json")):
+        module_files.update(json.loads(p.read_text(encoding="utf-8")))
+    return module_files
+
+
 def generate(target_files: list[str], mod_files: list[str]) -> None:
     documents = fbm.analyze(target_files)
     documents = fbm.transform(documents, mod_files)
     fbm.generate(documents)
+    # Blender's Python modules: stubs from their source, over the ones the
+    # modfiles made (which keep only what inspect sees).
+    fbm.source_stub.write_stubs(source_module_files(),
+                                documented_modules(target_files),
+                                Path(fbm.config.get_output_dir()))
 
 
 def parse_options() -> None:

@@ -86,6 +86,8 @@ IGNORE_DOC_REGEX_LIST = {
     re.compile(r"^_bpy_types._RNAMetaPropGroup$"),
 }
 
+SOURCE_MODULES_FILENAME = "source_modules.json"
+
 CLASS_DEFAULT_VALUE_REGEX = re.compile(r"<(.+)[^<]*>")
 
 
@@ -444,6 +446,19 @@ def write_to_json_modfile(data: Dict, config: 'GenerationConfig') -> None:
             json.dump(d, f, indent=4, sort_keys=True, separators=(",", ": "))
 
 
+def write_source_module_list(modules: List, config: 'GenerationConfig') -> None:
+    # gen.py writes the stubs of these modules from their source (see
+    # fake_bpy_module.source_stub), over the ones made from the modfiles.
+    os.makedirs(config.output_dir, exist_ok=True)
+    source_files = {
+        m["module_name"]: m["module"].__file__
+        for m in modules if getattr(m["module"], "__file__", None)
+    }
+    filename = "{}/{}".format(config.output_dir, SOURCE_MODULES_FILENAME)
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(source_files, f, indent=4, sort_keys=True)
+
+
 def write_to_modfile(info: Dict, config: 'GenerationConfig') -> None:
     data = {}
 
@@ -555,6 +570,7 @@ def main() -> None:
 
     # Write module info to file.
     write_to_modfile(results, config)
+    write_source_module_list(imported_modules, config)
 
 
 if __name__ == "__main__":

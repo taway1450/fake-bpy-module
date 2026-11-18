@@ -65,6 +65,9 @@ def main() -> None:
         fake_bpy_module_test.integration_test.IntegrationTest,
 
         fake_bpy_module_test.utils_test.UtilsTest,
+
+        fake_bpy_module_test.source_stub_test.SourceStubTest,
+        fake_bpy_module_test.source_stub_test.WriteStubsTest,
     ]
 
     suite = unittest.TestSuite()
