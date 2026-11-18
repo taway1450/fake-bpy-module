@@ -104,6 +104,12 @@
       :mod-option arg value: skip-refine
       :option function: overload
 
+   .. method:: __buffer__(flags)
+
+      :type flags: int
+      :rtype: memoryview
+      :mod-option rtype: skip-refine
+
 .. class:: Euler
 
    .. method:: __init__(angles=(0.0, 0.0, 0.0), order='XYZ')
@@ -146,6 +152,12 @@
       :type value: collections.abc.Iterable[float] | :class:`Euler`
       :mod-option arg value: skip-refine
       :option function: overload
+
+   .. method:: __buffer__(flags)
+
+      :type flags: int
+      :rtype: memoryview
+      :mod-option rtype: skip-refine
 
 .. class:: Matrix
 
@@ -240,6 +252,12 @@
 
       :type other: float
       :rtype: :class:`Matrix`
+
+   .. method:: __buffer__(flags)
+
+      :type flags: int
+      :rtype: memoryview
+      :mod-option rtype: skip-refine
 
 .. class:: Quaternion
 
@@ -342,6 +360,12 @@
 
       :type other: float, :class:`Quaternion`
       :rtype: :class:`Quaternion`
+
+   .. method:: __buffer__(flags)
+
+      :type flags: int
+      :rtype: memoryview
+      :mod-option rtype: skip-refine
 
 .. class:: Vector
 
@@ -504,6 +528,12 @@
 
       :type other: float
       :rtype: :class:`Vector`
+
+   .. method:: __buffer__(flags)
+
+      :type flags: int
+      :rtype: memoryview
+      :mod-option rtype: skip-refine
 
 .. class:: MatrixAccess
 

@@ -104,6 +104,13 @@
       :type: :class:`bpy.types.Struct`
       :mod-option: skip-refine
 
+   .. data:: rna_type
+
+      The RNA type of this struct (read-only).
+
+      :type: :class:`bpy.types.Struct`
+      :mod-option: skip-refine
+
 .. class:: Light
 
    .. attribute:: node_tree
