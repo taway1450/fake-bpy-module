@@ -167,7 +167,7 @@ def collect_files() -> tuple[list[str], list[str]]:
             applicable_mod_versions.append(mod_version)
 
         # Collect multi-version mods.
-        multiversion_mods = ["2.79", "3.3"]
+        multiversion_mods = ["2.79", "3.3", "5.2"]
 
         applicable_mod_versions += [
             f"{mv}+"
