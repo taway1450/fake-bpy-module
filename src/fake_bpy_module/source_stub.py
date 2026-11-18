@@ -105,6 +105,18 @@ def _value_type(value: ast.expr, func: FunctionDef) -> str | None:
     return None
 
 
+def _bound_targets(target: ast.expr) -> list[ast.expr]:
+    """List what an assignment to ``target`` binds, through tuple unpacking.
+
+    In ``self.a.b = x`` that is ``self.a.b``, not ``self.a``.
+    """
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return [t for e in target.elts for t in _bound_targets(e)]
+    if isinstance(target, ast.Starred):
+        return _bound_targets(target.value)
+    return [target]
+
+
 def _self_assignments(
         func: FunctionDef, self_name: str
 ) -> list[tuple[str, str | None, bool]]:
@@ -118,7 +130,7 @@ def _self_assignments(
         else:
             continue
         for target, value in pairs:
-            for sub in ast.walk(target):
+            for sub in _bound_targets(target):
                 if not (isinstance(sub, ast.Attribute)
                         and isinstance(sub.value, ast.Name)
                         and sub.value.id == self_name):

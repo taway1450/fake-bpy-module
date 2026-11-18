@@ -194,6 +194,29 @@ class SourceStubTest(common.FakeBpyModuleTestBase):
         self.assertEqual(expect, make_stub(source))
 
 
+    def test_setting_a_member_of_an_attribute_declares_nothing(self) -> None:
+        source = dedent("""
+            class Panel:
+                def draw(self, context):
+                    self.layout.use_property_split = True
+                    self.items[0] = 1
+                    self.a, (self.b, *self.c) = 1, (2, 3)
+            """)
+        expect = dedent("""
+            import typing
+
+            class Panel:
+                a: typing.Any
+                b: typing.Any
+                c: typing.Any
+
+                def draw(self, context):
+                    ...
+            """)
+
+        self.assertEqual(expect, make_stub(source))
+
+
 class WriteStubsTest(common.FakeBpyModuleTestBase):
 
     name = "WriteStubsTest"
