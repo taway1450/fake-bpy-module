@@ -346,3 +346,7 @@
 .. data:: data_numpy_ndarray
 
    :type: :class:`numpy.ndarray`
+
+.. data:: data_iterator
+
+   :type: Iterator[str]

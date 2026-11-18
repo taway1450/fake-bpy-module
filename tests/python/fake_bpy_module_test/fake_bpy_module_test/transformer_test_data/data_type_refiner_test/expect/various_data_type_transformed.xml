@@ -736,3 +736,12 @@
         <data-type-list>
             <data-type option="never none">
                 npt.NDArray
+    <data>
+        <name>
+            data_iterator
+        <description>
+        <data-type-list>
+            <data-type option="never none">
+                collections.abc.Iterator[
+                str
+                ]
