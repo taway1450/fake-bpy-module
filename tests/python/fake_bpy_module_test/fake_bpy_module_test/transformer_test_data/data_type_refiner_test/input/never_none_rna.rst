@@ -1,13 +1,5 @@
 .. module:: bpy.types
 
-.. class:: bpy_struct
-
-   .. data:: bl_rna
-
-      The RNA type of this struct, a class attribute.
-
-      :type: :class:`Struct`
-
 .. class:: RenderViews
 
    .. attribute:: active

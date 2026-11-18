@@ -984,7 +984,7 @@ class DataTypeRefinerTest(TransformerTestBase):
 
         entry_points = [
             EntryPoint("bpy.types", name, "class")
-            for name in ("Struct", "SceneRenderView", "Material", "Object")
+            for name in ("SceneRenderView", "Material", "Object")
         ]
         transformer = Transformer(["data_type_refiner"], {
             "data_type_refiner": {"entry_points": entry_points}
@@ -1003,8 +1003,6 @@ class DataTypeRefinerTest(TransformerTestBase):
                     dtype_node.attributes["option"]
 
         self.assertEqual(options, {
-            # Every struct has its RNA type.
-            "bpy_struct.bl_rna": "never none",
             # The RST says never None: an active pointer keeps it.
             "RenderViews.active": "never none",
             # An int is never None, active or not.

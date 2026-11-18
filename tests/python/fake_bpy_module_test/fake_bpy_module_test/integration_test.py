@@ -392,3 +392,38 @@ class IntegrationTest(common.FakeBpyModuleTestBase):
         self.log(stub)
         self.assertIn("bpy_prop_collection[ClassB]", stub)
         self.assertIn("bpy_prop_collection[ClassB | ClassC]", stub)
+
+    def test_bl_rna_is_never_none(self) -> None:
+        # Every struct has its RNA type, set on each class (the shipped
+        # update mod of bpy.types says so).
+        input_dir = Path(self.output_dir) / "input"
+        input_dir.mkdir()
+        (input_dir / "bpy.types.bpy_struct.rst").write_text(
+            textwrap.dedent("""\
+            bpy_struct
+            ==========
+
+            .. currentmodule:: bpy.types
+
+            .. class:: bpy_struct
+
+               .. data:: bl_rna
+
+                  The RNA type of this struct, a class attribute.
+
+                  :type: :class:`Struct`
+
+            .. class:: Struct
+            """), encoding="utf-8")
+        mod_file = (Path(__file__).parents[4] / "src" / "mods" / "common" /
+                    "analyzer" / "update" / "bpy.types.mod.rst")
+
+        config.set_output_format("pyi")
+        documents = analyze([str(input_dir / "bpy.types.bpy_struct.rst")])
+        documents = transform(documents, [str(mod_file)])
+        generate(documents)
+
+        stub = (Path(self.output_dir) / "bpy-stubs" / "types" / "__init__.pyi"
+                ).read_text(encoding="utf-8")
+        self.log(stub)
+        self.assertIn("    bl_rna: Struct\n", stub)

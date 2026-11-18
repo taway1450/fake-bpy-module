@@ -95,6 +95,15 @@
       :type: :class:`bpy.types.ShaderNodeTree` | None
       :mod-option: skip-refine
 
+.. class:: bpy_struct
+
+   .. data:: bl_rna
+
+      The RNA type of this struct, a class attribute.
+
+      :type: :class:`bpy.types.Struct`
+      :mod-option: skip-refine
+
 .. class:: Light
 
    .. attribute:: node_tree

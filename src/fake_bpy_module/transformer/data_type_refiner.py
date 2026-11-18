@@ -683,12 +683,7 @@ class DataTypeRefiner(TransformerBase):
                 o, _ = parse_options(description_str)
                 rst_options.extend(o)
 
-            # RNA's own bl_rna is set on every struct.
             if variable_kind == 'CLS_ATTR' and is_pointer_prop:
-                if (f"{additional_info['self_class']}."
-                        f"{additional_info['data_name']}"
-                        == "bpy.types.bpy_struct.bl_rna"):
-                    rst_options.append("never none")
                 # A pointer a class redeclares narrows its base's, and keeps
                 # None only where its type says so.
                 # Ex: _Object_MESH.data is Mesh, Object.data is ID | None.
