@@ -6,7 +6,10 @@
 
    .. method:: __enter__()
 
-      :rtype: :class:`MatrixStackContext`
+      Entering it gives None, not the context.
+
+      :rtype: None
+      :mod-option rtype: skip-refine
 
    .. method:: __exit__(exc_type, exc_value, traceback)
 
@@ -23,7 +26,10 @@
 
    .. method:: __enter__()
 
-      :rtype: :class:`OffScreenStackContext`
+      Entering it gives None, not the context.
+
+      :rtype: None
+      :mod-option rtype: skip-refine
 
    .. method:: __exit__(exc_type, exc_value, traceback)
 
