@@ -89,6 +89,7 @@ _REGEX_DATA_TYPE_OPTION_STR = re.compile(r"\(([a-zA-Z, ]+?)\)$")
 _REGEX_DATA_TYPE_OPTION_END_WITH_NONE = re.compile(r"or None$")
 _REGEX_DATA_TYPE_OPTION_OPTIONAL = re.compile(r"(^|^An |\()[oO]ptional(\s|\))")
 _REGEX_DATA_TYPE_STARTS_WITH_COLLECTION = re.compile(r"^(list|tuple|dict)")
+_REGEX_LAST_IDENTIFIER = re.compile(r"([a-zA-Z_][a-zA-Z0-9_]*)\W*$")
 _REGEX_DATA_TYPE_MODIFIER_TYPES = re.compile(r"^(Iterable|Iterator|Sequence|Callable|list|dict|tuple|type|set)?\[(.+)\]$")  # noqa: E501
 _REGEX_DATA_TYPE_LITERALS_TYPE = re.compile(r"^Literal\[(.+)\]$")
 _REGEX_DATA_TYPE_LITERALS_WITH_BACK_QUOTE_TYPE = re.compile(r"^Literal\[`(.+)`\]$")  # noqa: E501
@@ -673,6 +674,11 @@ class DataTypeRefiner(TransformerBase):
                         f"{additional_info['data_name']}"
                         == "bpy.types.bpy_struct.bl_rna"):
                     rst_options.append("never none")
+                # A pointer a class redeclares narrows its base's, and keeps
+                # None only where its type says so.
+                # Ex: _Object_MESH.data is Mesh, Object.data is ID | None.
+                if additional_info.get("redeclared", False):
+                    rst_options.append("never none")
             option_results.extend(rst_options)
 
             option_results = sorted(set(option_results))
@@ -1016,6 +1022,42 @@ class DataTypeRefiner(TransformerBase):
 
         return [], False
 
+    @staticmethod
+    def _inherited_attribute_names(
+            class_nodes: list[ClassNode]) -> dict[str, set[str]]:
+        """Return the attributes each class's bases in the module declare."""
+        bases: dict[str, list[str]] = {}
+        attrs: dict[str, set[str]] = {}
+        for class_node in class_nodes:
+            name = class_node.element(NameNode).astext()
+            bases[name] = [
+                m.group(1)
+                for base_class_node in find_children(
+                    class_node.element(BaseClassListNode), BaseClassNode)
+                if (m := _REGEX_LAST_IDENTIFIER.search(
+                    base_class_node.astext().split("[")[0]))
+            ]
+            attrs[name] = {
+                attr_node.element(NameNode).astext()
+                for attr_node in find_children(
+                    class_node.element(AttributeListNode), AttributeNode)
+            }
+
+        result: dict[str, set[str]] = {}
+        for name, class_bases in bases.items():
+            inherited: set[str] = set()
+            seen: set[str] = set()
+            pending = list(class_bases)
+            while pending:
+                base = pending.pop()
+                if base in seen or base not in bases:
+                    continue
+                seen.add(base)
+                inherited |= attrs[base]
+                pending.extend(bases[base])
+            result[name] = inherited
+        return result
+
     def _refine(self, document: nodes.document) -> None:
         def refine(dtype_list_node: DataTypeListNode, module_name: str,
                    variable_kind: str, description_str: str | None = None,
@@ -1092,6 +1134,7 @@ class DataTypeRefiner(TransformerBase):
         module_name = module_node.element(NameNode).astext()
 
         class_nodes = find_children(document, ClassNode)
+        inherited_attrs = self._inherited_attribute_names(class_nodes)
         for class_node in class_nodes:
             class_name = class_node.element(NameNode).astext()
 
@@ -1134,7 +1177,9 @@ class DataTypeRefiner(TransformerBase):
                        description_str=description,
                        additional_info={
                            "self_class": f"{module_name}.{class_name}",
-                           "data_name": f"{attr_name}"
+                           "data_name": f"{attr_name}",
+                           "redeclared":
+                               attr_name in inherited_attrs[class_name],
                        })
 
             base_class_list_node = class_node.element(BaseClassListNode)
