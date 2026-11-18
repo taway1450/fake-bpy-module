@@ -195,3 +195,50 @@ class IntegrationTest(common.FakeBpyModuleTestBase):
         self.assertIn("ClassA = module_1.ClassA\n", stub)
         self.assertNotIn("class ClassA", stub)
         self.assertNotIn("ClassA:", stub)
+
+    def test_orphan_page(self) -> None:
+        # Sphinx reads ":orphan:" before a page's title as file-wide metadata.
+        # Blender's API docs mark the type-checker-only views so
+        # (bpy.types._Object_MESH), and their classes belong in the stubs.
+        input_dir = Path(self.output_dir) / "input"
+        input_dir.mkdir()
+        (input_dir / "module_1.ClassA.rst").write_text(textwrap.dedent("""\
+            ClassA
+            ======
+
+            .. currentmodule:: module_1
+
+            .. class:: ClassA
+
+               .. attribute:: kind
+
+                  :type: str
+            """), encoding="utf-8")
+        (input_dir / "module_1._ClassA_X.rst").write_text(textwrap.dedent("""\
+            :orphan:
+
+            _ClassA_X
+            =========
+
+            .. currentmodule:: module_1
+
+            .. class:: _ClassA_X
+
+               A ClassA whose kind is 'X'.
+
+               .. attribute:: kind
+
+                  :type: Literal['X']
+            """), encoding="utf-8")
+
+        config.set_output_format("pyi")
+        documents = analyze([str(input_dir / "module_1.ClassA.rst"),
+                             str(input_dir / "module_1._ClassA_X.rst")])
+        documents = transform(documents, [])
+        generate(documents)
+
+        stub = (Path(self.output_dir) / "module_1-stubs" / "__init__.pyi"
+                ).read_text(encoding="utf-8")
+        self.log(stub)
+        self.assertIn("class ClassA:", stub)
+        self.assertIn("class _ClassA_X:", stub)
