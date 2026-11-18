@@ -325,3 +325,192 @@
       :mod-option arg exc_type: skip-refine
       :type exc_val: BaseException | None
       :mod-option arg exc_val: skip-refine
+
+.. class:: Node
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.NodeTree` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.NodeTree`
+      :mod-option: skip-refine
+
+.. class:: NodeSocket
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.NodeTree` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.NodeTree`
+      :mod-option: skip-refine
+
+.. class:: NodeLink
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.NodeTree` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.NodeTree`
+      :mod-option: skip-refine
+
+.. class:: NodeTreeInterfaceItem
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.NodeTree` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.NodeTree`
+      :mod-option: skip-refine
+
+.. class:: PoseBone
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Object` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Object`
+      :mod-option: skip-refine
+
+.. class:: EditBone
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Armature` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Armature`
+      :mod-option: skip-refine
+
+.. class:: Modifier
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Object` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Object`
+      :mod-option: skip-refine
+
+.. class:: Constraint
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Object` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Object`
+      :mod-option: skip-refine
+
+.. class:: VertexGroup
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Object` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Object`
+      :mod-option: skip-refine
+
+.. class:: MeshVertex
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Mesh` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Mesh`
+      :mod-option: skip-refine
+
+.. class:: MeshEdge
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Mesh` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Mesh`
+      :mod-option: skip-refine
+
+.. class:: MeshPolygon
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Mesh` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Mesh`
+      :mod-option: skip-refine
+
+.. class:: MeshLoop
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Mesh` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Mesh`
+      :mod-option: skip-refine
+
+.. class:: MeshLoopTriangle
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Mesh` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Mesh`
+      :mod-option: skip-refine
+
+.. class:: AttributeGroupMesh
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Mesh` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Mesh`
+      :mod-option: skip-refine
+
+.. class:: AttributeGroupPointCloud
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.PointCloud` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.PointCloud`
+      :mod-option: skip-refine
+
+.. class:: AttributeGroupCurves
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Curves` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Curves`
+      :mod-option: skip-refine
+
+.. class:: AttributeGroupGreasePencil
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.GreasePencil` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.GreasePencil`
+      :mod-option: skip-refine
+
+.. class:: ViewLayer
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Scene` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Scene`
+      :mod-option: skip-refine
+
+.. class:: LayerCollection
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Scene` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Scene`
+      :mod-option: skip-refine
+
+.. class:: Strip
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Scene` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Scene`
+      :mod-option: skip-refine
