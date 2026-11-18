@@ -8,11 +8,21 @@ lose nothing the source says.
 """
 
 import ast
+import json
+import re
 from pathlib import Path
 
-# Python modules whose stubs still come from the API docs: `bpy` is mostly C,
-# and `_bpy_types` holds the Python half of `bpy.types`.
-DOCUMENTED_ELSEWHERE = {"bpy", "_bpy_types", "bpy_types"}
+# Written by gen_external_modules_modfile.py (SOURCE_MODULES_FILENAME there),
+# which runs in Blender and cannot import this package.
+SOURCE_MODULES_FILENAME = "source_modules.json"
+
+# `bpy` is mostly C: its stub still comes from the API docs, which document
+# its submodules but not the package itself. (`_bpy_types`, the Python half
+# of `bpy.types`, is left out of source_modules.json by the modfile
+# generator.)
+DOCUMENTED_ELSEWHERE = {"bpy"}
+
+MODULE_DIRECTIVE = re.compile(r"^\.\. (?:py:)?module:: (\S+)\s*$", re.MULTILINE)
 
 FunctionDef = ast.FunctionDef | ast.AsyncFunctionDef
 FUNCTION_DEFS = (ast.FunctionDef, ast.AsyncFunctionDef)
@@ -29,9 +39,15 @@ def _ellipsis() -> ast.stmt:
     return ast.Expr(ast.Constant(...))
 
 
-class _Context:
+class _TypingImport:
+
+    """Whether a stub refers to ``typing``, so that it must import it.
+
+    An attribute of unknown type is ``typing.Any``.
+    """
+
     def __init__(self) -> None:
-        self.needs_typing = False
+        self.needed = False
 
 
 def _strip_body(func: FunctionDef) -> None:
@@ -176,11 +192,11 @@ def _instance_attributes(cls: ast.ClassDef) -> dict[str, str | None]:
     return result
 
 
-def _stub_class(cls: ast.ClassDef, ctx: _Context) -> None:
+def _stub_class(cls: ast.ClassDef, typing_import: _TypingImport) -> None:
     attributes = {}
     if not _has_synthesized_init(cls):
         attributes = _instance_attributes(cls)
-    cls.body = _stub_body(cls.body, ctx)
+    cls.body = _stub_body(cls.body, typing_import)
     declared = _declared_names(cls.body)
     insert_at = 0
     while insert_at < len(cls.body) and \
@@ -192,7 +208,7 @@ def _stub_class(cls: ast.ClassDef, ctx: _Context) -> None:
             continue
         annotation = type_
         if annotation is None:
-            ctx.needs_typing = True
+            typing_import.needed = True
             annotation = "typing.Any"
         new.append(ast.AnnAssign(
             target=ast.Name(name),
@@ -229,28 +245,29 @@ def _is_docstring(stmt: ast.stmt) -> bool:
             and isinstance(stmt.value.value, str))
 
 
-def _stub_block(statements: list[ast.stmt], ctx: _Context) -> list[ast.stmt]:
+def _stub_block(statements: list[ast.stmt],
+                typing_import: _TypingImport) -> list[ast.stmt]:
     """Stub a block nested in ``if`` or ``try``, which is never empty."""
-    return _stub_body(statements, ctx) or [_ellipsis()]
+    return _stub_body(statements, typing_import) or [_ellipsis()]
 
 
-def _stub_statement(stmt: ast.stmt, ctx: _Context) -> bool:
+def _stub_statement(stmt: ast.stmt, typing_import: _TypingImport) -> bool:
     """Stub ``stmt`` in place; return whether the stub keeps it."""
     if isinstance(stmt, FUNCTION_DEFS):
         _strip_body(stmt)
     elif isinstance(stmt, ast.ClassDef):
-        _stub_class(stmt, ctx)
+        _stub_class(stmt, typing_import)
     elif isinstance(stmt, ast.If):
         if _is_main_guard(stmt):
             return False
-        stmt.body = _stub_block(stmt.body, ctx)
-        stmt.orelse = _stub_body(stmt.orelse, ctx)
+        stmt.body = _stub_block(stmt.body, typing_import)
+        stmt.orelse = _stub_body(stmt.orelse, typing_import)
     elif isinstance(stmt, (ast.Try, ast.TryStar)):
-        stmt.body = _stub_block(stmt.body, ctx)
+        stmt.body = _stub_block(stmt.body, typing_import)
         for handler in stmt.handlers:
-            handler.body = _stub_block(handler.body, ctx)
-        stmt.orelse = _stub_body(stmt.orelse, ctx)
-        stmt.finalbody = _stub_body(stmt.finalbody, ctx)
+            handler.body = _stub_block(handler.body, typing_import)
+        stmt.orelse = _stub_body(stmt.orelse, typing_import)
+        stmt.finalbody = _stub_body(stmt.finalbody, typing_import)
     elif isinstance(stmt, ASSIGNMENTS):
         # Setting an attribute or an item declares nothing.
         targets = stmt.targets if isinstance(stmt, ast.Assign) \
@@ -261,7 +278,8 @@ def _stub_statement(stmt: ast.stmt, ctx: _Context) -> bool:
     return True
 
 
-def _stub_body(statements: list[ast.stmt], ctx: _Context) -> list[ast.stmt]:
+def _stub_body(statements: list[ast.stmt],
+               typing_import: _TypingImport) -> list[ast.stmt]:
     """Keep the declarations among ``statements``.
 
     These are the imports, the assignments to names, the classes and
@@ -271,7 +289,8 @@ def _stub_body(statements: list[ast.stmt], ctx: _Context) -> list[ast.stmt]:
     """
     kept: list[ast.stmt] = []
     for index, stmt in enumerate(statements):
-        if (index == 0 and _is_docstring(stmt)) or _stub_statement(stmt, ctx):
+        if ((index == 0 and _is_docstring(stmt))
+                or _stub_statement(stmt, typing_import)):
             kept.append(stmt)
     return kept
 
@@ -308,11 +327,31 @@ def make_stub(source: str, *, as_package: bool = False) -> str:
         for node in ast.walk(module):
             if isinstance(node, ast.ImportFrom) and node.level > 0:
                 node.level += 1
-    ctx = _Context()
-    module.body = _stub_body(module.body, ctx)
-    if ctx.needs_typing and not _imports_typing(module):
+    typing_import = _TypingImport()
+    module.body = _stub_body(module.body, typing_import)
+    if typing_import.needed and not _imports_typing(module):
         _insert_typing_import(module)
     return ast.unparse(module) + "\n"
+
+
+def documented_modules(target_files: list[str]) -> set[str]:
+    """Return the modules the API docs ``target_files`` document."""
+    modules = set()
+    for f in target_files:
+        modules.update(MODULE_DIRECTIVE.findall(
+            Path(f).read_text(encoding="utf-8", errors="replace")))
+    return modules
+
+
+def source_module_files(generated_mods_dir: Path) -> dict[str, Path]:
+    """Return the source file of each Python module listed for source stubs.
+
+    The modfile generator lists them under ``generated_mods_dir``.
+    """
+    module_files = {}
+    for p in sorted(Path(generated_mods_dir).rglob(SOURCE_MODULES_FILENAME)):
+        module_files.update(json.loads(p.read_text(encoding="utf-8")))
+    return module_files
 
 
 def write_stubs(module_files: dict[str, Path], documented: set[str],

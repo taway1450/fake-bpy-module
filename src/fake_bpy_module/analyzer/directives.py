@@ -318,28 +318,23 @@ class ClassDirective(rst.Directive):
     _CLASS_ARG_FIELD_REGEX = re.compile(r":(arg|param|type)\s+([a-zA-Z0-9_]+):")
     _INIT_METHOD_REGEX = re.compile(r"\.\.\s+method::\s+__init__\s*\(")
 
-    def _content_with_init(self) -> list[str] | None:
-        """The class content with an ``__init__`` method made from the class
-        signature, when the signature has arguments, the class documents each
-        of them with its own fields and no ``__init__`` is documented.
-        A signature naming base classes (``ClassA(BaseClassA)``) documents no
-        arguments, so it gets none.
+    def _signature_fields(self) -> tuple[str, set[str], list[str]] | None:
+        """Return the class signature and the arguments the class documents.
+
+        That is the parenthesised signature, the argument names the class
+        documents with its own fields, and those fields' lines (each with its
+        continuation lines); None for a signature without parentheses.
 
         Ex: ``.. class:: Sound(filename, stream=0)`` with ``:arg filename:``
-            and ``:arg stream:`` -> ``.. method:: __init__(filename, stream=0)``
+            -> ``("(filename, stream=0)", {"filename"}, [...])``
         """
         m = self._CLASS_NAME_WITH_ARGS_REGEX.match(self.arguments[0])
         if not m:
             return None
-        lines = list(self.content)
-        if any(self._INIT_METHOD_REGEX.match(line.strip()) for line in lines):
-            return None
-
-        # The class-level argument fields, each with its continuation lines.
-        fields: list[str] = []
         documented: set[str] = set()
+        fields: list[str] = []
         in_field = False
-        for line in lines:
+        for line in self.content:
             if field := self._CLASS_ARG_FIELD_REGEX.match(line):
                 documented.add(field.group(2))
                 in_field = True
@@ -348,13 +343,33 @@ class ClassDirective(rst.Directive):
                 fields.append(line)
             else:
                 in_field = False
+        return m.group(2), documented, fields
+
+    def _content_with_init(self) -> list[str] | None:
+        """Return the class content with an ``__init__`` from its signature.
+
+        This is done when the signature has arguments, the class documents
+        each of them with its own fields and no ``__init__`` is documented.
+        A signature naming base classes (``ClassA(BaseClassA)``) documents no
+        arguments, so it gets none.
+
+        Ex: ``.. class:: Sound(filename, stream=0)`` with ``:arg filename:``
+            and ``:arg stream:`` -> ``.. method:: __init__(filename, stream=0)``
+        """
+        signature_fields = self._signature_fields()
+        if signature_fields is None:
+            return None
+        signature, documented, fields = signature_fields
+        lines = list(self.content)
+        if any(self._INIT_METHOD_REGEX.match(line.strip()) for line in lines):
+            return None
 
         args = [a.strip().split("=")[0].strip()
-                for a in m.group(2)[1:-1].split(",")]
+                for a in signature[1:-1].split(",")]
         if not args or not documented.issuperset(args):
             return None
 
-        return [*lines, "", f".. method:: __init__{m.group(2)}", "",
+        return [*lines, "", f".. method:: __init__{signature}", "",
                 *[f"   {line}" for line in fields]]
 
     def _signature_bases(self) -> list[str]:
@@ -369,17 +384,16 @@ class ClassDirective(rst.Directive):
             ``.. class:: KDTree(size)`` with ``:arg size:`` -> ``[]``
             ``.. class:: GPUBatch(type, buf, elem=None)`` -> ``[]``
         """
-        m = self._CLASS_NAME_WITH_ARGS_REGEX.match(self.arguments[0])
-        if not m:
+        signature_fields = self._signature_fields()
+        if signature_fields is None:
             return []
+        signature, documented, _ = signature_fields
         try:
-            class_def = ast.parse(f"class _{m.group(2)}: pass").body[0]
+            class_def = ast.parse(f"class _{signature}: pass").body[0]
         except SyntaxError:
             return []
         if any(kw.arg != "metaclass" for kw in class_def.keywords):
             return []
-        documented = {field.group(2) for line in self.content
-                      if (field := self._CLASS_ARG_FIELD_REGEX.match(line))}
         bases = [b.id for b in class_def.bases if isinstance(b, ast.Name)]
         if documented.intersection(bases):
             return []
