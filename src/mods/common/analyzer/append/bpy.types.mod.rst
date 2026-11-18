@@ -4,11 +4,19 @@
 
 .. class:: AddonPreferences
 
+   .. attribute:: is_registered
+
+      :type: bool
+
    .. attribute:: layout
 
       :type: :class:`bpy.types.UILayout` (never None)
 
 .. class:: Menu
+
+   .. attribute:: is_registered
+
+      :type: bool
 
    .. classmethod:: append(draw_func)
 
@@ -23,6 +31,78 @@
       :type: bool
 
 .. class:: Operator
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: AssetShelf
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: FileHandler
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: Header
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: KeyingSetInfo
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: Node
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: NodeSocket
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: NodeTree
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: NodeTreeInterfaceSocket
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: PropertyGroup
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: RenderEngine
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: UIList
+
+   .. attribute:: is_registered
+
+      :type: bool
+
+.. class:: USDHook
 
    .. attribute:: is_registered
 
