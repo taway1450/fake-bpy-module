@@ -2,6 +2,21 @@
 
 .. module:: gpu.types
 
+.. class:: Buffer
+
+   .. method:: __iter__()
+
+      Iterate over the items: a value by the buffer's format, or a row Buffer of a multi-dimension one.
+
+      :rtype: collections.abc.Iterator[typing.Any]
+      :mod-option rtype: skip-refine
+
+   .. method:: __buffer__(flags)
+
+      :type flags: int
+      :rtype: memoryview
+      :mod-option rtype: skip-refine
+
 .. class:: MatrixStackContext
 
    .. method:: __enter__()
