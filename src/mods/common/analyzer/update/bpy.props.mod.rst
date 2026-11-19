@@ -22,10 +22,10 @@
    :type update: collections.abc.Callable[[_GenericType1, :class:`bpy.types.Context`], None] | None
    :mod-option arg update: skip-refine
 
-   :type get: collections.abc.Callable[[_GenericType1], collections.abc.Sequence[bool]] | None
+   :type get: collections.abc.Callable[[_GenericType1], collections.abc.Sequence[bool] | collections.abc.Sequence[collections.abc.Sequence[bool]] | collections.abc.Sequence[collections.abc.Sequence[collections.abc.Sequence[bool]]]] | None
    :mod-option arg get: skip-refine
 
-   :type set: collections.abc.Callable[[_GenericType1, collections.abc.Sequence[bool]], None] | None
+   :type set: collections.abc.Callable[[_GenericType1, tuple[typing.Any, ...]], None] | None
    :mod-option arg set: skip-refine
 
 .. function:: EnumProperty(items, update, get, set)
@@ -67,10 +67,10 @@
    :type update: collections.abc.Callable[[_GenericType1, :class:`bpy.types.Context`], None] | None
    :mod-option arg update: skip-refine
 
-   :type get: collections.abc.Callable[[_GenericType1], collections.abc.Sequence[float]] | None
+   :type get: collections.abc.Callable[[_GenericType1], collections.abc.Sequence[float] | collections.abc.Sequence[collections.abc.Sequence[float]] | collections.abc.Sequence[collections.abc.Sequence[collections.abc.Sequence[float]]]] | None
    :mod-option arg get: skip-refine
 
-   :type set: collections.abc.Callable[[_GenericType1, collections.abc.Sequence[float]], None] | None
+   :type set: collections.abc.Callable[[_GenericType1, tuple[typing.Any, ...]], None] | None
    :mod-option arg set: skip-refine
 
 .. function:: IntProperty(update, get, set)
@@ -93,10 +93,10 @@
    :type update: collections.abc.Callable[[_GenericType1, :class:`bpy.types.Context`], None] | None
    :mod-option arg update: skip-refine
 
-   :type get: collections.abc.Callable[[_GenericType1], collections.abc.Sequence[int]] | None
+   :type get: collections.abc.Callable[[_GenericType1], collections.abc.Sequence[int] | collections.abc.Sequence[collections.abc.Sequence[int]] | collections.abc.Sequence[collections.abc.Sequence[collections.abc.Sequence[int]]]] | None
    :mod-option arg get: skip-refine
 
-   :type set: collections.abc.Callable[[_GenericType1, collections.abc.Sequence[int]], None] | None
+   :type set: collections.abc.Callable[[_GenericType1, tuple[typing.Any, ...]], None] | None
    :mod-option arg set: skip-refine
 
 .. function:: PointerProperty(update)
