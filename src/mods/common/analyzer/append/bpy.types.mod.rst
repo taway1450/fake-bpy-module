@@ -380,6 +380,15 @@
       :type: :class:`bpy.types.Armature`
       :mod-option: skip-refine
 
+.. class:: BoneCollection
+
+   .. attribute:: id_data
+
+      The :class:`bpy.types.Armature` this data is from, which every RNA pointer to it is made with (readonly)
+
+      :type: :class:`bpy.types.Armature`
+      :mod-option: skip-refine
+
 .. class:: Modifier
 
    .. attribute:: id_data
