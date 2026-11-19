@@ -154,6 +154,41 @@ class BpyModuleTweaker(TransformerBase):
                 dtype_node.attributes["mod-option"] = "skip-refine"
                 dtype_list_node.append_child(dtype_node)
 
+    def _make_bpy_path_ensure_ext_generic(
+            self, document: nodes.document) -> None:
+        module_name = get_first_child(
+            document, ModuleNode).element(NameNode).astext()
+        if module_name != "bpy.path":
+            return
+
+        # ensure_ext returns the path as the type it is given, `str` or
+        # `bytes`. The docs type it with a TypeVar `_AnyStr`, which the data
+        # type refiner cannot resolve and drops.
+        for func_node in document.findall(FunctionNode):
+            if func_node.element(NameNode).astext() != "ensure_ext":
+                continue
+            arg_nodes = [
+                arg_node for arg_node in find_children(
+                    func_node.element(ArgumentListNode), ArgumentNode)
+                if arg_node.element(NameNode).astext() in {"filepath", "ext"}]
+            if len(arg_nodes) != 2:  # noqa: PLR2004
+                output_log(
+                    LOG_LEVEL_WARN,
+                    "bpy.path.ensure_ext does not take filepath and ext, so "
+                    "it is not typed as generic")
+                continue
+
+            func_node.attributes["generic-types"] =                 "_GenericType1: (str, bytes)"
+            for dtype_list_node in (
+                    *(arg_node.element(DataTypeListNode)
+                      for arg_node in arg_nodes),
+                    func_node.element(FunctionReturnNode).element(
+                        DataTypeListNode)):
+                dtype_list_node.clear()
+                dtype_node = make_data_type_node("_GenericType1")
+                dtype_node.attributes["mod-option"] = "skip-refine"
+                dtype_list_node.append_child(dtype_node)
+
     def _add_bpy_ops_override_parameters(
             self, document: nodes.document) -> None:
         module_name = get_first_child(
@@ -329,6 +364,7 @@ class BpyModuleTweaker(TransformerBase):
                 self._make_bpy_prop_functions_arguments_kwonlyargs,
                 self._add_bpy_app_handlers_functions_data_types,
                 self._make_bpy_app_handlers_persistent_decorator,
+                self._make_bpy_path_ensure_ext_generic,
                 self._add_bpy_ops_override_parameters,
                 self._rebase_bpy_types_class_base_class,
                 self._change_ops_function_to_function_class

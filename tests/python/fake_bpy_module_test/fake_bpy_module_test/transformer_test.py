@@ -489,6 +489,37 @@ class BpyModuleTweakerTest(TransformerTestBase):
                                  strict=True):
             self.compare_with_file_contents(trans.pformat(), expect)
 
+    def test_make_bpy_path_ensure_ext_generic(self) -> None:
+        rst_files = [f"{self.data_dir}/input/make_bpy_path_ensure_ext_generic.rst"]
+        expect_files = [
+            f"{self.data_dir}/expect/make_bpy_path_ensure_ext_generic.xml"]
+        expect_transformed_files = [
+            f"{self.data_dir}/expect/"
+            "make_bpy_path_ensure_ext_generic_transformed.xml"]
+
+        analyzer = BaseAnalyzer()
+        documents = analyzer.analyze(rst_files)
+
+        self.assertEqual(len(documents), len(expect_files))
+        for doc, expect in zip(documents, expect_files, strict=True):
+            self.compare_with_file_contents(doc.pformat(), expect)
+
+        transformer = Transformer([
+            "bpy_module_tweaker"
+        ], {
+            "bpy_module_tweaker": {
+                "tweak_items": [
+                    "make_bpy_path_ensure_ext_generic"
+                ]
+            }
+        })
+        transformed = transformer.transform(documents)
+
+        self.assertEqual(len(transformed), len(expect_transformed_files))
+        for trans, expect in zip(transformed, expect_transformed_files,
+                                 strict=True):
+            self.compare_with_file_contents(trans.pformat(), expect)
+
     def test_add_bpy_ops_override_parameters(self) -> None:
         rst_files = ["add_bpy_ops_override_parameters.rst"]
         expect_files = ["add_bpy_ops_override_parameters.xml"]

@@ -1,0 +1,47 @@
+<document source="<string>">
+    <source-filename>
+        make_bpy_path_ensure_ext_generic.rst
+    <module>
+        <name>
+            bpy.path
+        <description>
+    <function function_type="function" generic-types="_GenericType1: (str, bytes)">
+        <name>
+            ensure_ext
+        <description>
+            Return the path with the extension added if it is not already set.
+        <argument-list>
+            <argument argument_type="arg">
+                <name>
+                    filepath
+                <description>
+                    The file path, a str or bytes.
+                <default-value>
+                <data-type-list>
+                    <data-type mod-option="skip-refine">
+                        _GenericType1
+            <argument argument_type="arg">
+                <name>
+                    ext
+                <description>
+                    The extension to check for.
+                <default-value>
+                <data-type-list>
+                    <data-type mod-option="skip-refine">
+                        _GenericType1
+            <argument argument_type="kwonlyarg">
+                <name>
+                    case_sensitive
+                <description>
+                    Check for matching case when comparing extensions.
+                <default-value>
+                    False
+                <data-type-list>
+                    <data-type>
+                        bool
+        <return>
+            <description>
+                The file path with the given extension, of the type of filepath.
+            <data-type-list>
+                <data-type mod-option="skip-refine">
+                    _GenericType1
